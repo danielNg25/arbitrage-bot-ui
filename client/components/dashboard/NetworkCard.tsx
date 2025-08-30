@@ -44,7 +44,7 @@ export function NetworkCard({
           Executed: {executedCount}
         </div>
       </div>
-      <div className="grid grid-cols-2 gap-6 p-6 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-x-10 gap-y-3 p-6 md:grid-cols-2">
         <div>
           <p className="text-xs uppercase tracking-wide text-muted-foreground">
             Total Profit
