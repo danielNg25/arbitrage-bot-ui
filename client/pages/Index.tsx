@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ProfitChart, SeriesPoint } from "@/components/dashboard/ProfitChart";
 import { NetworkCard, type Network } from "@/components/dashboard/NetworkCard";
+import ThemeToggle from "@/components/ThemeToggle";
 
 export type Opportunity = {
   network_id: number;
