@@ -46,18 +46,18 @@ export function NetworkCard({
       </div>
       <div className="grid grid-cols-1 gap-x-10 gap-y-3 p-6 md:grid-cols-2">
         <div>
-          <p className="text-xs uppercase tracking-wide text-muted-foreground">
+          <p className="text-[11px] uppercase tracking-wider text-muted-foreground">
             Total Profit
           </p>
-          <p className="mt-1 text-xl font-semibold text-emerald-400">
+          <p className="mt-1 text-lg md:text-xl font-semibold leading-none font-mono tabular-nums text-emerald-400">
             {currency.format(network.total_profit_usd)}
           </p>
         </div>
         <div>
-          <p className="text-xs uppercase tracking-wide text-muted-foreground">
+          <p className="text-[11px] uppercase tracking-wider text-muted-foreground">
             Total Gas
           </p>
-          <p className="mt-1 text-xl font-semibold text-rose-400">
+          <p className="mt-1 text-lg md:text-xl font-semibold leading-none font-mono tabular-nums text-rose-400">
             {currency.format(network.total_gas_usd)}
           </p>
         </div>
