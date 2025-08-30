@@ -27,7 +27,7 @@ export function NetworkCard({
   return (
     <div
       className={cn(
-        "group rounded-xl border bg-card text-card-foreground shadow-sm transition-shadow hover:shadow-lg",
+        "group rounded-md border-2 border-border/60 bg-card text-card-foreground shadow-md transition-all hover:border-primary/50 hover:shadow-lg",
         className,
       )}
     >
@@ -44,7 +44,7 @@ export function NetworkCard({
           Executed: {executedCount}
         </div>
       </div>
-      <div className="grid grid-cols-2 gap-4 border-t p-5 md:grid-cols-2">
+      <div className="grid grid-cols-2 gap-4 border-t border-border/60 p-5 md:grid-cols-2">
         <div>
           <p className="text-xs uppercase tracking-wide text-muted-foreground">
             Total Profit
