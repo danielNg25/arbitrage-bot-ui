@@ -3,7 +3,10 @@ import React, { useMemo } from "react";
 export type SeriesPoint = { label: string; value: number };
 
 function formatNumber(n: number) {
-  const f = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
+  const f = new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+  });
   return f.format(n);
 }
 
@@ -42,7 +45,10 @@ export function ProfitChart({
       .join(" ");
 
     const yTicks = 4;
-    const ticksArr = Array.from({ length: yTicks + 1 }, (_, i) => yMin + (i * (yMax - yMin)) / yTicks);
+    const ticksArr = Array.from(
+      { length: yTicks + 1 },
+      (_, i) => yMin + (i * (yMax - yMin)) / yTicks,
+    );
     const xLabels = series.map((s, i) => ({ x: xScale(i), label: s.label }));
 
     return { path: d, min: yMin, max: yMax, ticks: ticksArr, labels: xLabels };
@@ -57,8 +63,16 @@ export function ProfitChart({
         <svg viewBox="0 0 800 320" className="h-64 w-full min-w-[600px]">
           <defs>
             <linearGradient id="profGrad" x1="0" x2="0" y1="0" y2="1">
-              <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity="0.28" />
-              <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0.02" />
+              <stop
+                offset="0%"
+                stopColor="hsl(var(--primary))"
+                stopOpacity="0.28"
+              />
+              <stop
+                offset="100%"
+                stopColor="hsl(var(--primary))"
+                stopOpacity="0.02"
+              />
             </linearGradient>
           </defs>
           <g>
@@ -66,18 +80,45 @@ export function ProfitChart({
               const y = 24 + (i * (320 - 24 - 28)) / (ticks.length - 1);
               return (
                 <g key={i}>
-                  <line x1={48} x2={800 - 16} y1={y} y2={y} stroke="hsl(var(--border))" />
-                  <text x={8} y={y + 4} fontSize="10" fill="hsl(var(--muted-foreground))">
+                  <line
+                    x1={48}
+                    x2={800 - 16}
+                    y1={y}
+                    y2={y}
+                    stroke="hsl(var(--border))"
+                  />
+                  <text
+                    x={8}
+                    y={y + 4}
+                    fontSize="10"
+                    fill="hsl(var(--muted-foreground))"
+                  >
                     {formatNumber(min + ((max - min) * i) / (ticks.length - 1))}
                   </text>
                 </g>
               );
             })}
           </g>
-          <path d={path} fill="none" stroke="hsl(var(--primary))" strokeWidth={2} />
-          <path d={`${path} L 784,292 L 48,292 Z`} fill="url(#profGrad)" opacity={0.8} />
+          <path
+            d={path}
+            fill="none"
+            stroke="hsl(var(--primary))"
+            strokeWidth={2}
+          />
+          <path
+            d={`${path} L 784,292 L 48,292 Z`}
+            fill="url(#profGrad)"
+            opacity={0.8}
+          />
           {labels.map((l, i) => (
-            <text key={i} x={l.x} y={310} fontSize="10" textAnchor="middle" fill="hsl(var(--muted-foreground))">
+            <text
+              key={i}
+              x={l.x}
+              y={310}
+              fontSize="10"
+              textAnchor="middle"
+              fill="hsl(var(--muted-foreground))"
+            >
               {l.label}
             </text>
           ))}

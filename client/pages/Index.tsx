@@ -42,32 +42,65 @@ function lastNDays(n: number) {
   return days;
 }
 
-function buildDummyData(): { networks: Network[]; opportunities: Opportunity[] } {
+function buildDummyData(): {
+  networks: Network[];
+  opportunities: Opportunity[];
+} {
   const networks: Network[] = [
-    { chain_id: 1, name: "Ethereum", total_profit_usd: 158423.23, total_gas_usd: 48231.55 },
-    { chain_id: 137, name: "Polygon", total_profit_usd: 40213.87, total_gas_usd: 7221.04 },
-    { chain_id: 56, name: "BSC", total_profit_usd: 65891.09, total_gas_usd: 12891.66 },
+    {
+      chain_id: 1,
+      name: "Ethereum",
+      total_profit_usd: 158423.23,
+      total_gas_usd: 48231.55,
+    },
+    {
+      chain_id: 137,
+      name: "Polygon",
+      total_profit_usd: 40213.87,
+      total_gas_usd: 7221.04,
+    },
+    {
+      chain_id: 56,
+      name: "BSC",
+      total_profit_usd: 65891.09,
+      total_gas_usd: 12891.66,
+    },
   ];
   const now = Date.now();
-  const opportunities: Opportunity[] = Array.from({ length: 50 }).map((_, i) => {
-    const dayOffset = Math.floor(Math.random() * 30);
-    const created = new Date(now - dayOffset * 24 * 60 * 60 * 1000 - Math.random() * 86400000);
-    const status = Math.random() > 0.2 ? "executed" : "skipped";
-    const profit = status === "executed" ? Number((Math.random() * 2000 - 300).toFixed(2)) : 0;
-    const nets = [1, 137, 56];
-    return {
-      network_id: nets[i % nets.length],
-      status,
-      profit_usd: profit,
-      created_at: created.getTime(),
-    };
-  });
+  const opportunities: Opportunity[] = Array.from({ length: 50 }).map(
+    (_, i) => {
+      const dayOffset = Math.floor(Math.random() * 30);
+      const created = new Date(
+        now - dayOffset * 24 * 60 * 60 * 1000 - Math.random() * 86400000,
+      );
+      const status = Math.random() > 0.2 ? "executed" : "skipped";
+      const profit =
+        status === "executed"
+          ? Number((Math.random() * 2000 - 300).toFixed(2))
+          : 0;
+      const nets = [1, 137, 56];
+      return {
+        network_id: nets[i % nets.length],
+        status,
+        profit_usd: profit,
+        created_at: created.getTime(),
+      };
+    },
+  );
   return { networks, opportunities };
 }
 
 export default function Index() {
-  const [networksState, setNetworks] = useState<LoadState<Network[]>>({ data: null, loading: true, error: null });
-  const [oppsState, setOpps] = useState<LoadState<Opportunity[]>>({ data: null, loading: true, error: null });
+  const [networksState, setNetworks] = useState<LoadState<Network[]>>({
+    data: null,
+    loading: true,
+    error: null,
+  });
+  const [oppsState, setOpps] = useState<LoadState<Opportunity[]>>({
+    data: null,
+    loading: true,
+    error: null,
+  });
   const [lastUpdated, setLastUpdated] = useState<number | null>(null);
 
   const load = useCallback(async () => {
@@ -111,7 +144,9 @@ export default function Index() {
   }, [oppsState.data]);
 
   const chartSeries: SeriesPoint[] = useMemo(() => {
-    const opps = (oppsState.data || []).filter((o) => o.status === "executed" && typeof o.profit_usd === "number");
+    const opps = (oppsState.data || []).filter(
+      (o) => o.status === "executed" && typeof o.profit_usd === "number",
+    );
     const buckets = new Map<string, number>();
     for (const d of lastNDays(30)) {
       const key = d.toISOString().slice(0, 10);
@@ -120,7 +155,8 @@ export default function Index() {
     for (const o of opps) {
       const day = new Date(o.created_at);
       const key = startOfDay(day).toISOString().slice(0, 10);
-      if (buckets.has(key)) buckets.set(key, (buckets.get(key) || 0) + (o.profit_usd || 0));
+      if (buckets.has(key))
+        buckets.set(key, (buckets.get(key) || 0) + (o.profit_usd || 0));
     }
     return Array.from(buckets.entries()).map(([day, val]) => {
       const d = new Date(day);
@@ -137,7 +173,9 @@ export default function Index() {
         <div className="container mx-auto flex items-center justify-between py-4">
           <div className="flex items-center gap-3">
             <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-cyan-400 to-blue-600" />
-            <h1 className="text-xl font-bold tracking-tight">Arbitrage Bot Dashboard</h1>
+            <h1 className="text-xl font-bold tracking-tight">
+              Arbitrage Bot Dashboard
+            </h1>
           </div>
           <div className="flex items-center gap-2">
             <Button onClick={load} className="shadow-sm">
@@ -150,7 +188,10 @@ export default function Index() {
         {loading && (
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="h-36 animate-pulse rounded-xl border bg-card" />
+              <div
+                key={i}
+                className="h-36 animate-pulse rounded-xl border bg-card"
+              />
             ))}
           </div>
         )}
@@ -159,20 +200,32 @@ export default function Index() {
           <>
             <section aria-label="Network Metrics" className="space-y-3">
               <div className="flex items-end justify-between">
-                <h2 className="text-lg font-semibold tracking-tight">Network Metrics</h2>
+                <h2 className="text-lg font-semibold tracking-tight">
+                  Network Metrics
+                </h2>
                 {lastUpdated && (
-                  <p className="text-xs text-muted-foreground">Updated {new Date(lastUpdated).toLocaleTimeString()}</p>
+                  <p className="text-xs text-muted-foreground">
+                    Updated {new Date(lastUpdated).toLocaleTimeString()}
+                  </p>
                 )}
               </div>
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
                 {(networksState.data || []).map((net) => (
-                  <NetworkCard key={net.chain_id} network={net} executedCount={executedCountByNetwork.get(net.chain_id) || 0} />
+                  <NetworkCard
+                    key={net.chain_id}
+                    network={net}
+                    executedCount={
+                      executedCountByNetwork.get(net.chain_id) || 0
+                    }
+                  />
                 ))}
               </div>
             </section>
 
             <section aria-label="Profit Over Time" className="space-y-3">
-              <h2 className="text-lg font-semibold tracking-tight">Profit Over Time (30d)</h2>
+              <h2 className="text-lg font-semibold tracking-tight">
+                Profit Over Time (30d)
+              </h2>
               <ProfitChart title="Total Profit (USD)" series={chartSeries} />
             </section>
           </>
