@@ -181,6 +181,9 @@ export default function Index() {
             <Button onClick={load} className="shadow-sm">
               Refresh
             </Button>
+            <React.Suspense>
+              <ThemeToggle />
+            </React.Suspense>
           </div>
         </div>
       </header>
