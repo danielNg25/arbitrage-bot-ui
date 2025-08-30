@@ -66,6 +66,9 @@ function buildDummyData(): {
       total_profit_usd: 65891.09,
       total_gas_usd: 12891.66,
     },
+    { chain_id: 42161, name: "Arbitrum", total_profit_usd: 31231.12, total_gas_usd: 5123.44 },
+    { chain_id: 10, name: "Optimism", total_profit_usd: 28344.77, total_gas_usd: 4011.32 },
+    { chain_id: 8453, name: "Base", total_profit_usd: 22111.95, total_gas_usd: 2987.41 },
   ];
   const now = Date.now();
   const opportunities: Opportunity[] = Array.from({ length: 50 }).map(
@@ -79,7 +82,7 @@ function buildDummyData(): {
         status === "executed"
           ? Number((Math.random() * 2000 - 300).toFixed(2))
           : 0;
-      const nets = [1, 137, 56];
+      const nets = [1, 137, 56, 42161, 10, 8453];
       return {
         network_id: nets[i % nets.length],
         status,
@@ -190,11 +193,11 @@ export default function Index() {
       </header>
       <main className="container mx-auto space-y-6 py-6">
         {loading && (
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
             {Array.from({ length: 3 }).map((_, i) => (
               <div
                 key={i}
-                className="h-36 animate-pulse rounded-xl border bg-card"
+                className="h-36 animate-pulse rounded-md border-2 border-border/60 bg-card"
               />
             ))}
           </div>
@@ -213,7 +216,7 @@ export default function Index() {
                   </p>
                 )}
               </div>
-              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
                 {(networksState.data || []).map((net) => (
                   <NetworkCard
                     key={net.chain_id}
