@@ -55,7 +55,7 @@ export function ProfitChart({
   }, [series]);
 
   return (
-    <div className="rounded-xl border bg-card p-5 shadow-sm">
+    <div className="rounded-md border-2 border-border/60 bg-card p-5 shadow-md">
       <div className="mb-4 flex items-center justify-between">
         <h3 className="text-base font-semibold">{title}</h3>
       </div>
