@@ -40,7 +40,7 @@ export function NetworkCard({
             Chain ID: {network.chain_id}
           </p>
         </div>
-        <div className="inline-flex items-center rounded-sm bg-primary/15 px-2 py-1 text-xs font-medium text-primary-foreground">
+        <div className="inline-flex items-center rounded-sm border border-primary/40 bg-primary/20 px-2.5 py-1 text-[11px] font-medium text-primary">
           Executed: {executedCount}
         </div>
       </div>
