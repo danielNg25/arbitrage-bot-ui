@@ -66,9 +66,24 @@ function buildDummyData(): {
       total_profit_usd: 65891.09,
       total_gas_usd: 12891.66,
     },
-    { chain_id: 42161, name: "Arbitrum", total_profit_usd: 31231.12, total_gas_usd: 5123.44 },
-    { chain_id: 10, name: "Optimism", total_profit_usd: 28344.77, total_gas_usd: 4011.32 },
-    { chain_id: 8453, name: "Base", total_profit_usd: 22111.95, total_gas_usd: 2987.41 },
+    {
+      chain_id: 42161,
+      name: "Arbitrum",
+      total_profit_usd: 31231.12,
+      total_gas_usd: 5123.44,
+    },
+    {
+      chain_id: 10,
+      name: "Optimism",
+      total_profit_usd: 28344.77,
+      total_gas_usd: 4011.32,
+    },
+    {
+      chain_id: 8453,
+      name: "Base",
+      total_profit_usd: 22111.95,
+      total_gas_usd: 2987.41,
+    },
   ];
   const now = Date.now();
   const opportunities: Opportunity[] = Array.from({ length: 50 }).map(
