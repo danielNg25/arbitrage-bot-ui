@@ -11,11 +11,11 @@ export type OpportunityRow = {
   profit_token_symbol: string | null; // Add profit token symbol
   profit_usd: number | null;
   gas_usd: number | null;
-  created_at: number; // unix ms
+  source_block_timestamp: number; // Unix timestamp for sorting
   source_block_number: number | null; // Add source block number
 };
 
-export type SortKey = "profit_usd" | "created_at";
+export type SortKey = "profit_usd" | "source_block_timestamp";
 export type SortDir = "asc" | "desc";
 
 const currency = new Intl.NumberFormat("en-US", {
@@ -23,6 +23,28 @@ const currency = new Intl.NumberFormat("en-US", {
   currency: "USD",
   maximumFractionDigits: 2,
 });
+
+// Format GMT timestamp to local time for display
+function formatLocalTimestamp(gmtTimestamp: string | number): string {
+  try {
+    const date = new Date(gmtTimestamp);
+    // Format as local time: YYYY-MM-DD HH:MM:SS
+    return date
+      .toLocaleString("en-US", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: false,
+      })
+      .replace(",", "");
+  } catch (error) {
+    console.error("Error formatting timestamp:", error);
+    return "Invalid Date";
+  }
+}
 
 // Dynamic currency formatter for small amounts
 function formatCurrencyWithPrecision(amount: number): string {
@@ -119,11 +141,14 @@ export default function OpportunityTable({
               <th className="px-4 py-3 text-left">
                 <button
                   type="button"
-                  onClick={() => onSortChange("created_at")}
+                  onClick={() => onSortChange("source_block_timestamp")}
                   className="inline-flex items-center gap-1 font-semibold hover:text-foreground"
                 >
                   Source Block Timestamp
-                  <SortIcon active={sortKey === "created_at"} dir={sortDir} />
+                  <SortIcon
+                    active={sortKey === "source_block_timestamp"}
+                    dir={sortDir}
+                  />
                 </button>
               </th>
             </tr>
@@ -131,7 +156,7 @@ export default function OpportunityTable({
           <tbody>
             {rows.map((r, idx) => (
               <tr
-                key={`${r.network_id}-${r.created_at}-${idx}`}
+                key={`${r.network_id}-${r.source_block_timestamp}-${idx}`}
                 className="border-t border-border/60 hover:bg-accent/10 cursor-pointer"
                 onClick={() => onRowClick?.(r)}
                 role={onRowClick ? "button" : undefined}
@@ -176,12 +201,7 @@ export default function OpportunityTable({
                   {r.source_block_number || "N/A"}
                 </td>
                 <td className="px-4 py-3 align-top">
-                  {
-                    new Date(r.created_at)
-                      .toISOString()
-                      .replace("T", " ")
-                      .split(".")[0]
-                  }
+                  {formatLocalTimestamp(r.source_block_timestamp * 1000)}
                 </td>
               </tr>
             ))}

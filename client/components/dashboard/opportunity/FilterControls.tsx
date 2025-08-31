@@ -17,6 +17,8 @@ export default function FilterControls({
   networks,
   profitMin,
   profitMax,
+  timestampFrom,
+  timestampTo,
   onChange,
   onClear,
 }: {
@@ -25,11 +27,15 @@ export default function FilterControls({
   networks: { chain_id: number; name: string }[];
   profitMin: number | "";
   profitMax: number | "";
+  timestampFrom: string;
+  timestampTo: string;
   onChange: (v: {
     status?: StatusFilter;
     networkId?: number | "all";
     profitMin?: number | "";
     profitMax?: number | "";
+    timestampFrom?: string;
+    timestampTo?: string;
   }) => void;
   onClear: () => void;
 }) {
@@ -46,6 +52,29 @@ export default function FilterControls({
     onChange({ status: value as StatusFilter });
   };
 
+  // Helper function to convert datetime-local to Unix timestamp
+  const convertToUnixTimestamp = (datetimeLocal: string): string => {
+    if (!datetimeLocal) return "";
+    try {
+      const date = new Date(datetimeLocal);
+      return Math.floor(date.getTime() / 1000).toString();
+    } catch (error) {
+      console.error("Error converting to Unix timestamp:", error);
+      return "";
+    }
+  };
+
+  // Helper function to convert Unix timestamp to readable date
+  const formatUnixTimestamp = (unixTimestamp: string): string => {
+    if (!unixTimestamp) return "";
+    try {
+      const date = new Date(parseInt(unixTimestamp) * 1000);
+      return date.toLocaleString();
+    } catch (error) {
+      return unixTimestamp;
+    }
+  };
+
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
       <div className="flex flex-col">
@@ -56,7 +85,9 @@ export default function FilterControls({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Statuses</SelectItem>
-            <SelectItem value="Profitable">Profitable (profit &gt; 0)</SelectItem>
+            <SelectItem value="Profitable">
+              Profitable (profit &gt; 0)
+            </SelectItem>
             {allStatuses.map((statusOption) => (
               <SelectItem key={statusOption} value={statusOption}>
                 {getStatusDisplayName(statusOption)}
@@ -116,6 +147,38 @@ export default function FilterControls({
             }
           />
         </div>
+      </div>
+      <div className="flex flex-col">
+        <label className="mb-1 text-xs text-muted-foreground">
+          Source Block Timestamp
+        </label>
+        <div className="flex items-center gap-2">
+          <input
+            type="datetime-local"
+            className="h-10 w-40 rounded-md border-2 border-border/60 bg-background px-3 text-sm"
+            value={timestampFrom}
+            onChange={(e) => {
+              const unixTimestamp = convertToUnixTimestamp(e.target.value);
+              onChange({ timestampFrom: unixTimestamp });
+            }}
+          />
+          <span className="text-xs text-muted-foreground">to</span>
+          <input
+            type="datetime-local"
+            className="h-10 w-40 rounded-md border-2 border-border/60 bg-background px-3 text-sm"
+            value={timestampTo}
+            onChange={(e) => {
+              const unixTimestamp = convertToUnixTimestamp(e.target.value);
+              onChange({ timestampTo: unixTimestamp });
+            }}
+          />
+        </div>
+        {(timestampFrom || timestampTo) && (
+          <div className="text-xs text-muted-foreground mt-1">
+            Unix timestamps: {timestampFrom || "none"} to{" "}
+            {timestampTo || "none"}
+          </div>
+        )}
       </div>
       <div className="flex gap-2">
         <Button type="button" variant="outline" onClick={onClear}>

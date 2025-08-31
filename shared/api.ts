@@ -34,7 +34,7 @@ export type StatusFilter = "all" | OpportunityStatus | "Profitable";
 export function getStatusDisplayName(status: string): string {
   // Normalize status to handle both formats
   const normalizedStatus = status.toLowerCase().replace(/_/g, "");
-  
+
   const statusMap: Record<string, string> = {
     // Handle both formats
     succeeded: "Success",
@@ -45,7 +45,7 @@ export function getStatusDisplayName(status: string): string {
     skipped: "Skipped",
     none: "None",
   };
-  
+
   return (
     statusMap[normalizedStatus] || statusMap[status.toLowerCase()] || status
   );
@@ -60,6 +60,7 @@ export interface OpportunityResponse {
   profit_usd: number | null;
   gas_usd: number | null;
   created_at: string; // ISO 8601 timestamp
+  source_block_timestamp: number; // Unix timestamp
   source_tx: string | null;
   source_block_number: number | null;
   profit_token: string;

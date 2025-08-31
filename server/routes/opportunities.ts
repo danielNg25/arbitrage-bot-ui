@@ -11,6 +11,8 @@ export const handleOpportunities: RequestHandler = async (req, res) => {
       status,
       min_profit_usd,
       max_profit_usd,
+      min_source_timestamp,
+      max_source_timestamp,
     } = req.query;
 
     // Parse and validate pagination
@@ -31,6 +33,12 @@ export const handleOpportunities: RequestHandler = async (req, res) => {
 
     if (min_profit_usd) params.set("min_profit_usd", String(min_profit_usd));
     if (max_profit_usd) params.set("max_profit_usd", String(max_profit_usd));
+
+    // Add timestamp filters
+    if (min_source_timestamp)
+      params.set("min_source_timestamp", String(min_source_timestamp));
+    if (max_source_timestamp)
+      params.set("max_source_timestamp", String(max_source_timestamp));
 
     // Fetch opportunities from external API
     const response = await fetch(

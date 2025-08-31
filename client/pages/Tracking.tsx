@@ -99,6 +99,7 @@ function buildDummyOpps(nets: Network[], count = 50): OpportunityResponse[] {
       profit_usd: profit,
       gas_usd: gas,
       created_at: created.toISOString(),
+      source_block_timestamp: Math.floor(created.getTime() / 1000),
       source_tx: `0x${id}`,
       source_block_number: Math.floor(Math.random() * 1000000) + 1000000,
       profit_token: token,
@@ -114,7 +115,7 @@ export default function Tracking() {
   const [networksLoading, setNetworksLoading] = useState(true);
   const [status, setStatus] = useState<StatusFilter>("all");
   const [networkId, setNetworkId] = useState<number | "all">("all");
-  const [sortKey, setSortKey] = useState<SortKey>("created_at");
+  const [sortKey, setSortKey] = useState<SortKey>("source_block_timestamp");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [page, setPage] = useState(1); // Changed to 1-based indexing
   const [pageSize, setPageSize] = useState(100); // Changed to match API default
@@ -126,6 +127,8 @@ export default function Tracking() {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [profitMin, setProfitMin] = useState<number | "">("");
   const [profitMax, setProfitMax] = useState<number | "">("");
+  const [timestampFrom, setTimestampFrom] = useState<string>("");
+  const [timestampTo, setTimestampTo] = useState<string>("");
 
   useEffect(() => {
     // Fetch real network data from the API
@@ -184,6 +187,14 @@ export default function Tracking() {
       if (profitMin !== "") params.set("min_profit_usd", String(profitMin));
       if (profitMax !== "") params.set("max_profit_usd", String(profitMax));
 
+      // Add timestamp filters - Unix timestamps
+      if (timestampFrom !== "") {
+        params.set("min_source_timestamp", timestampFrom);
+      }
+      if (timestampTo !== "") {
+        params.set("max_source_timestamp", timestampTo);
+      }
+
       const res = await fetch(
         `/api/v1/opportunities${params.toString() ? `?${params.toString()}` : ""}`,
       );
@@ -215,7 +226,17 @@ export default function Tracking() {
     } finally {
       setLoading(false);
     }
-  }, [page, pageSize, networkId, status, profitMin, profitMax, networks]);
+  }, [
+    page,
+    pageSize,
+    networkId,
+    status,
+    profitMin,
+    profitMax,
+    timestampFrom,
+    timestampTo,
+    networks,
+  ]);
 
   useEffect(() => {
     fetchOpportunities();
@@ -256,7 +277,9 @@ export default function Tracking() {
         profit_token_symbol: opp.profit_token_symbol, // Add profit token symbol
         profit_usd: opp.profit_usd,
         gas_usd: opp.gas_usd,
-        created_at: new Date(opp.created_at).getTime(),
+        source_block_timestamp: Math.floor(
+          new Date(opp.source_block_timestamp).getTime() / 1000,
+        ),
         source_block_number: opp.source_block_number, // Add source block number
       };
     });
@@ -310,11 +333,17 @@ export default function Tracking() {
           }))}
           profitMin={profitMin}
           profitMax={profitMax}
+          timestampFrom={timestampFrom}
+          timestampTo={timestampTo}
           onChange={(v) => {
             if (v.status) setStatus(v.status);
             if (typeof v.networkId !== "undefined") setNetworkId(v.networkId);
             if (typeof v.profitMin !== "undefined") setProfitMin(v.profitMin);
             if (typeof v.profitMax !== "undefined") setProfitMax(v.profitMax);
+            if (typeof v.timestampFrom !== "undefined")
+              setTimestampFrom(v.timestampFrom);
+            if (typeof v.timestampTo !== "undefined")
+              setTimestampTo(v.timestampTo);
 
             setPage(1);
           }}
@@ -323,6 +352,8 @@ export default function Tracking() {
             setNetworkId("all");
             setProfitMin("");
             setProfitMax("");
+            setTimestampFrom("");
+            setTimestampTo("");
 
             setPage(1);
           }}
@@ -344,7 +375,7 @@ export default function Tracking() {
               sortDir={sortDir}
               onSortChange={onSortChange}
               onRowClick={(r) => {
-                const rid = r.id || String(r.created_at);
+                const rid = r.id || String(r.source_block_timestamp);
                 navigate(`/opportunities/${rid}`);
               }}
             />
