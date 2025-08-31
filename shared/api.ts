@@ -12,6 +12,32 @@ export interface DemoResponse {
 }
 
 /**
+ * Opportunity status matching the Rust enum
+ */
+export type OpportunityStatus =
+  | "Succeeded" // Transaction was successful
+  | "PartiallySucceeded" // Transaction was partially successful
+  | "Reverted" // Transaction reverted
+  | "Error" // Transaction failed with an error
+  | "Skipped" // Transaction was skipped (e.g. no profit)
+  | "None"; // No status
+
+/**
+ * Map opportunity status to shorter display names
+ */
+export function getStatusDisplayName(status: OpportunityStatus): string {
+  const statusMap: Record<OpportunityStatus, string> = {
+    Succeeded: "Success",
+    PartiallySucceeded: "Partial",
+    Reverted: "Reverted",
+    Error: "Error",
+    Skipped: "Skipped",
+    None: "None",
+  };
+  return statusMap[status];
+}
+
+/**
  * Network interface matching the API response
  */
 export interface Network {

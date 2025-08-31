@@ -1,4 +1,5 @@
 import React from "react";
+import { getStatusDisplayName } from "@shared/api";
 
 export type OpportunityDetail = {
   id?: string | null;
@@ -39,7 +40,11 @@ function shorten(addr?: string | null) {
   return addr.length <= 12 ? addr : `${addr.slice(0, 6)}…${addr.slice(-4)}`;
 }
 
-const fmtUSD = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 2 });
+const fmtUSD = new Intl.NumberFormat("en-US", {
+  style: "currency",
+  currency: "USD",
+  maximumFractionDigits: 2,
+});
 
 function iso(v?: number | null) {
   if (!v && v !== 0) return "N/A";
@@ -78,7 +83,17 @@ function explorerBase(networkId: number): string {
   }
 }
 
-function LinkAddr({ addr, base, kind = "address", labelClass = "" }: { addr?: string | null; base: string; kind?: "address" | "tx"; labelClass?: string }) {
+function LinkAddr({
+  addr,
+  base,
+  kind = "address",
+  labelClass = "",
+}: {
+  addr?: string | null;
+  base: string;
+  kind?: "address" | "tx";
+  labelClass?: string;
+}) {
   if (!addr) return <span>N/A</span>;
   const href = `${base}/${kind}/${addr}`;
   return (
@@ -93,10 +108,18 @@ function LinkAddr({ addr, base, kind = "address", labelClass = "" }: { addr?: st
   );
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
   return (
     <div className="rounded-md border-2 border-border/60 bg-card text-card-foreground p-4 shadow-md">
-      <div className="mb-3 text-sm font-semibold text-muted-foreground">{title}</div>
+      <div className="mb-3 text-sm font-semibold text-muted-foreground">
+        {title}
+      </div>
       <div className="divide-y divide-border/60">{children}</div>
     </div>
   );
@@ -115,15 +138,19 @@ export default function DebugDetails({
 }) {
   const base = explorerBase(opp.network_id);
   const statusColor =
-    opp.status === "executed" || opp.status === "succeeded" || opp.status === "partially_succeeded"
+    opp.status === "Succeeded" || opp.status === "PartiallySucceeded"
       ? "bg-green-500/20 text-green-400 border-green-500/30"
-      : opp.status === "pending"
+      : opp.status === "Skipped"
         ? "bg-yellow-500/20 text-yellow-400 border-yellow-500/30"
-        : "bg-red-500/20 text-red-400 border-red-500/30";
+        : opp.status === "Reverted" || opp.status === "Error"
+          ? "bg-red-500/20 text-red-400 border-red-500/30"
+          : "bg-gray-500/20 text-gray-400 border-gray-500/30";
 
-  const profitColor = (v?: number | null) => (v != null && v >= 0 ? "text-green-400" : v != null ? "text-red-400" : "");
+  const profitColor = (v?: number | null) =>
+    v != null && v >= 0 ? "text-green-400" : v != null ? "text-red-400" : "";
 
-  const showProfitUsd = opp.status === "executed" || opp.status === "succeeded" || opp.status === "partially_succeeded";
+  const showProfitUsd =
+    opp.status === "Succeeded" || opp.status === "PartiallySucceeded";
 
   const badgeClasses = (kind: "token" | "pool") =>
     kind === "token"
@@ -145,19 +172,28 @@ export default function DebugDetails({
         {kv("Network", `${networkName} (${opp.network_id})`)}
         {kv(
           "Status",
-          <span className={`inline-flex items-center rounded-sm border px-2 py-0.5 text-xs font-medium ${statusColor}`}>{opp.status}</span>,
+          <span
+            className={`inline-flex items-center rounded-sm border px-2 py-0.5 text-xs font-medium ${statusColor}`}
+          >
+            {getStatusDisplayName(opp.status as any) || opp.status}
+          </span>,
         )}
         {showProfitUsd &&
           kv(
             "Profit (USD)",
-            opp.profit_usd == null ? "N/A" : <span className={profitColor(opp.profit_usd)}>{fmtUSD.format(opp.profit_usd)}</span>,
+            opp.profit_usd == null ? (
+              "N/A"
+            ) : (
+              <span className={profitColor(opp.profit_usd)}>
+                {fmtUSD.format(opp.profit_usd)}
+              </span>
+            ),
           )}
         {kv(
           "Profit Token",
           <span>
             {tokenLabel(opp.profit_token)} (
-            <LinkAddr addr={opp.profit_token} base={base} kind="address" />
-            )
+            <LinkAddr addr={opp.profit_token} base={base} kind="address" />)
           </span>,
         )}
         {kv(
@@ -165,12 +201,20 @@ export default function DebugDetails({
           dbg?.path && dbg.path.length >= 3 ? (
             <span>
               {tokenLabel(dbg.path[0])} - {tokenLabel(dbg.path[2])} (
-              <LinkAddr addr={opp.source_pool ?? dbg.path[1] ?? null} base={base} kind="address" />
+              <LinkAddr
+                addr={opp.source_pool ?? dbg.path[1] ?? null}
+                base={base}
+                kind="address"
+              />
               )
             </span>
           ) : (
             <span>
-              <LinkAddr addr={opp.source_pool ?? null} base={base} kind="address" />
+              <LinkAddr
+                addr={opp.source_pool ?? null}
+                base={base}
+                kind="address"
+              />
             </span>
           ),
         )}
@@ -189,7 +233,11 @@ export default function DebugDetails({
                     {i % 2 === 0 ? tokenLabel(p) : shorten(p)}
                   </a>
                   {i < dbg.path!.length - 1 && (
-                    <svg className="h-4 w-4 text-muted-foreground" viewBox="0 0 20 20" fill="currentColor">
+                    <svg
+                      className="h-4 w-4 text-muted-foreground"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
                       <path d="M7 5l5 5-5 5" />
                     </svg>
                   )}
@@ -202,7 +250,7 @@ export default function DebugDetails({
         )}
         {kv(
           "Error",
-          opp.status === "failed" || opp.status === "reverted" || dbg?.error ? (
+          opp.status === "Error" || opp.status === "Reverted" || dbg?.error ? (
             <span className="text-red-400">{dbg?.error || opp.status}</span>
           ) : (
             "N/A"
@@ -215,22 +263,36 @@ export default function DebugDetails({
         <Section title="Simulation">
           {kv(
             "Estimated Revenue",
-            dbg && (dbg.estimate_profit_token_amount || dbg.estimate_profit_usd != null) ? (
+            dbg &&
+              (dbg.estimate_profit_token_amount ||
+                dbg.estimate_profit_usd != null) ? (
               <span>
-                {dbg.estimate_profit_token_amount ? <span className="mr-1">{dbg.estimate_profit_token_amount}</span> : null}
+                {dbg.estimate_profit_token_amount ? (
+                  <span className="mr-1">
+                    {dbg.estimate_profit_token_amount}
+                  </span>
+                ) : null}
                 {dbg.estimate_profit_usd != null ? (
-                  <span className={profitColor(dbg.estimate_profit_usd)}>({fmtUSD.format(dbg.estimate_profit_usd)})</span>
+                  <span className={profitColor(dbg.estimate_profit_usd)}>
+                    ({fmtUSD.format(dbg.estimate_profit_usd)})
+                  </span>
                 ) : null}
               </span>
             ) : (
               "N/A"
             ),
           )}
-          {kv("Source Tx", <LinkAddr addr={opp.source_tx ?? null} base={base} kind="tx" />)}
+          {kv(
+            "Source Tx",
+            <LinkAddr addr={opp.source_tx ?? null} base={base} kind="tx" />,
+          )}
           {kv("Source Tx Block", opp.source_block_number ?? "N/A")}
           {kv("Source Tx Block Time", iso(opp.source_block_timestamp ?? null))}
           {kv("Source Log Index", opp.source_log_index ?? "N/A")}
-          {kv("Simulation Time (ms)", dbg?.simulation_time == null ? "N/A" : dbg.simulation_time)}
+          {kv(
+            "Simulation Time (ms)",
+            dbg?.simulation_time == null ? "N/A" : dbg.simulation_time,
+          )}
           {kv("Volume", opp.amount)}
         </Section>
 
@@ -240,27 +302,41 @@ export default function DebugDetails({
             opp.profit || opp.profit_usd != null ? (
               <span>
                 {opp.profit ? <span className="mr-1">{opp.profit}</span> : null}
-                {opp.profit_usd != null ? <span className={profitColor(opp.profit_usd)}>({fmtUSD.format(opp.profit_usd)})</span> : null}
+                {opp.profit_usd != null ? (
+                  <span className={profitColor(opp.profit_usd)}>
+                    ({fmtUSD.format(opp.profit_usd)})
+                  </span>
+                ) : null}
               </span>
             ) : (
               "N/A"
             ),
           )}
-          {kv("Executed Tx", <LinkAddr addr={opp.execute_tx ?? null} base={base} kind="tx" />)}
+          {kv(
+            "Executed Tx",
+            <LinkAddr addr={opp.execute_tx ?? null} base={base} kind="tx" />,
+          )}
           {kv("Execute Tx Block", opp.execute_block_number ?? "N/A")}
           {kv("Execute Tx Block Time", "N/A")}
           {kv(
             "Gas",
             opp.gas_token_amount || opp.gas_usd != null ? (
               <span>
-                {opp.gas_token_amount ? <span className="mr-1">{opp.gas_token_amount}</span> : null}
-                {opp.gas_usd != null ? <span>({fmtUSD.format(opp.gas_usd)})</span> : null}
+                {opp.gas_token_amount ? (
+                  <span className="mr-1">{opp.gas_token_amount}</span>
+                ) : null}
+                {opp.gas_usd != null ? (
+                  <span>({fmtUSD.format(opp.gas_usd)})</span>
+                ) : null}
               </span>
             ) : (
               "N/A"
             ),
           )}
-          {kv("Gas Price (wei)", dbg?.gas_price == null ? "N/A" : dbg.gas_price)}
+          {kv(
+            "Gas Price (wei)",
+            dbg?.gas_price == null ? "N/A" : dbg.gas_price,
+          )}
           {kv("Gas Usage", dbg?.gas_amount == null ? "N/A" : dbg.gas_amount)}
         </Section>
       </div>

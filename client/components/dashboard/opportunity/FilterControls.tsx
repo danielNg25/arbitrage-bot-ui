@@ -1,7 +1,8 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
+import { OpportunityStatus, getStatusDisplayName } from "@shared/api";
 
-export type StatusFilter = "all" | "pending" | "executed" | "failed";
+export type StatusFilter = "all" | OpportunityStatus;
 
 export default function FilterControls({
   status,
@@ -21,7 +22,14 @@ export default function FilterControls({
   profitMax: number | "";
   gasMin: number | "";
   gasMax: number | "";
-  onChange: (v: { status?: StatusFilter; networkId?: number | "all"; profitMin?: number | ""; profitMax?: number | ""; gasMin?: number | ""; gasMax?: number | "" }) => void;
+  onChange: (v: {
+    status?: StatusFilter;
+    networkId?: number | "all";
+    profitMin?: number | "";
+    profitMax?: number | "";
+    gasMin?: number | "";
+    gasMax?: number | "";
+  }) => void;
   onClear: () => void;
 }) {
   return (
@@ -34,9 +42,14 @@ export default function FilterControls({
           onChange={(e) => onChange({ status: e.target.value as StatusFilter })}
         >
           <option value="all">All</option>
-          <option value="pending">Pending</option>
-          <option value="executed">Executed</option>
-          <option value="failed">Failed</option>
+          <option value="Succeeded">{getStatusDisplayName("Succeeded")}</option>
+          <option value="PartiallySucceeded">
+            {getStatusDisplayName("PartiallySucceeded")}
+          </option>
+          <option value="Reverted">{getStatusDisplayName("Reverted")}</option>
+          <option value="Error">{getStatusDisplayName("Error")}</option>
+          <option value="Skipped">{getStatusDisplayName("Skipped")}</option>
+          <option value="None">{getStatusDisplayName("None")}</option>
         </select>
       </div>
       <div className="flex flex-col">
@@ -45,7 +58,10 @@ export default function FilterControls({
           className="h-10 rounded-md border-2 border-border/60 bg-background px-3 text-sm"
           value={networkId}
           onChange={(e) =>
-            onChange({ networkId: e.target.value === "all" ? "all" : Number(e.target.value) })
+            onChange({
+              networkId:
+                e.target.value === "all" ? "all" : Number(e.target.value),
+            })
           }
         >
           <option value="all">All Networks</option>
@@ -57,7 +73,9 @@ export default function FilterControls({
         </select>
       </div>
       <div className="flex flex-col">
-        <label className="mb-1 text-xs text-muted-foreground">Profit (USD)</label>
+        <label className="mb-1 text-xs text-muted-foreground">
+          Profit (USD)
+        </label>
         <div className="flex items-center gap-2">
           <input
             type="number"
@@ -65,7 +83,11 @@ export default function FilterControls({
             placeholder="Min"
             className="h-10 w-28 rounded-md border-2 border-border/60 bg-background px-3 text-sm"
             value={profitMin}
-            onChange={(e) => onChange({ profitMin: e.target.value === "" ? "" : Number(e.target.value) })}
+            onChange={(e) =>
+              onChange({
+                profitMin: e.target.value === "" ? "" : Number(e.target.value),
+              })
+            }
           />
           <span className="text-xs text-muted-foreground">to</span>
           <input
@@ -74,7 +96,11 @@ export default function FilterControls({
             placeholder="Max"
             className="h-10 w-28 rounded-md border-2 border-border/60 bg-background px-3 text-sm"
             value={profitMax}
-            onChange={(e) => onChange({ profitMax: e.target.value === "" ? "" : Number(e.target.value) })}
+            onChange={(e) =>
+              onChange({
+                profitMax: e.target.value === "" ? "" : Number(e.target.value),
+              })
+            }
           />
         </div>
       </div>
@@ -87,7 +113,11 @@ export default function FilterControls({
             placeholder="Min"
             className="h-10 w-28 rounded-md border-2 border-border/60 bg-background px-3 text-sm"
             value={gasMin}
-            onChange={(e) => onChange({ gasMin: e.target.value === "" ? "" : Number(e.target.value) })}
+            onChange={(e) =>
+              onChange({
+                gasMin: e.target.value === "" ? "" : Number(e.target.value),
+              })
+            }
           />
           <span className="text-xs text-muted-foreground">to</span>
           <input
@@ -96,7 +126,11 @@ export default function FilterControls({
             placeholder="Max"
             className="h-10 w-28 rounded-md border-2 border-border/60 bg-background px-3 text-sm"
             value={gasMax}
-            onChange={(e) => onChange({ gasMax: e.target.value === "" ? "" : Number(e.target.value) })}
+            onChange={(e) =>
+              onChange({
+                gasMax: e.target.value === "" ? "" : Number(e.target.value),
+              })
+            }
           />
         </div>
       </div>

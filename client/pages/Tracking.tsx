@@ -8,20 +8,68 @@ import FilterControls, {
   type StatusFilter,
 } from "@/components/dashboard/opportunity/FilterControls";
 import Pagination from "@/components/dashboard/opportunity/Pagination";
-import type { Network } from "@/components/dashboard/NetworkCard";
+import type { Network } from "@shared/api";
 import { useNavigate } from "react-router-dom";
 
 function buildDummyNetworks(): Network[] {
   return [
-    { chain_id: 1, name: "Ethereum", total_profit_usd: 0, total_gas_usd: 0 },
-    { chain_id: 137, name: "Polygon", total_profit_usd: 0, total_gas_usd: 0 },
-    { chain_id: 56, name: "BSC", total_profit_usd: 0, total_gas_usd: 0 },
+    {
+      chain_id: 1,
+      name: "Ethereum",
+      rpc: "https://eth-mainnet.g.alchemy.com/v2/demo",
+      block_explorer: "https://etherscan.io",
+      executed: 0,
+      success: 0,
+      failed: 0,
+      total_profit_usd: 0,
+      total_gas_usd: 0,
+      last_proccesed_created_at: null,
+      created_at: Math.floor(Date.now() / 1000),
+      executed_opportunities: 0,
+      success_rate: null,
+    },
+    {
+      chain_id: 137,
+      name: "Polygon",
+      rpc: "https://polygon-rpc.com",
+      block_explorer: "https://polygonscan.com",
+      executed: 0,
+      success: 0,
+      failed: 0,
+      total_profit_usd: 0,
+      total_gas_usd: 0,
+      last_proccesed_created_at: null,
+      created_at: Math.floor(Date.now() / 1000),
+      executed_opportunities: 0,
+      success_rate: null,
+    },
+    {
+      chain_id: 56,
+      name: "BSC",
+      rpc: "https://bsc-dataseed.binance.org",
+      block_explorer: "https://bscscan.com",
+      executed: 0,
+      success: 0,
+      failed: 0,
+      total_profit_usd: 0,
+      total_gas_usd: 0,
+      last_proccesed_created_at: null,
+      created_at: Math.floor(Date.now() / 1000),
+      executed_opportunities: 0,
+      success_rate: null,
+    },
   ];
 }
 
 function buildDummyOpps(nets: Network[], count = 50): OpportunityRow[] {
   const networks = nets.length ? nets : buildDummyNetworks();
-  const statuses: StatusFilter[] = ["pending", "executed", "failed"];
+  const statuses: StatusFilter[] = [
+    "Succeeded",
+    "PartiallySucceeded",
+    "Reverted",
+    "Error",
+    "Skipped",
+  ];
   const now = Date.now();
   return Array.from({ length: count }).map((_, i) => {
     const nid = networks[Math.floor(Math.random() * networks.length)].chain_id;
@@ -75,16 +123,9 @@ export default function Tracking() {
   const [gasMax, setGasMax] = useState<number | "">("");
 
   useEffect(() => {
-    (async () => {
-      try {
-        const res = await fetch("/networks");
-        if (!res.ok) throw new Error("no api");
-        const data = (await res.json()) as Network[];
-        setNetworks(data);
-      } catch {
-        setNetworks(buildDummyNetworks());
-      }
-    })();
+    // Networks are now fetched through the useNetworks hook in the Index page
+    // This component will receive networks as props or through context
+    setNetworks(buildDummyNetworks());
   }, []);
 
   const fetchRows = useCallback(async () => {

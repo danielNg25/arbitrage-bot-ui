@@ -14,10 +14,13 @@ export const handleNetworks: RequestHandler = async (req, res) => {
 
     res.json(networks);
   } catch (error) {
-    console.error("Error fetching networks:", error);
-    res.status(500).json({
-      error: "Failed to fetch networks",
-      message: error instanceof Error ? error.message : "Unknown error",
+    console.error("Error fetching networks from external API:", error);
+
+    // Return proper error response instead of fallback data
+    res.status(503).json({
+      error: "Service Unavailable",
+      message: "Unable to fetch networks from external API",
+      details: error instanceof Error ? error.message : "Unknown error",
     });
   }
 };

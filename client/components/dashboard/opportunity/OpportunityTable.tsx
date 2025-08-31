@@ -1,5 +1,6 @@
 import React from "react";
 import { ArrowUpDown, ArrowDown, ArrowUp } from "lucide-react";
+import { getStatusDisplayName } from "@shared/api";
 
 export type OpportunityRow = {
   id?: string;
@@ -29,14 +30,18 @@ function shorten(addr: string) {
 
 function StatusBadge({ status }: { status: OpportunityRow["status"] }) {
   const cls =
-    status === "executed"
+    status === "Succeeded" || status === "PartiallySucceeded"
       ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30"
-      : status === "pending"
+      : status === "Skipped"
         ? "bg-amber-500/15 text-amber-400 border-amber-500/30"
-        : "bg-rose-500/15 text-rose-400 border-rose-500/30";
+        : status === "Reverted" || status === "Error"
+          ? "bg-rose-500/15 text-rose-400 border-rose-500/30"
+          : "bg-gray-500/15 text-gray-400 border-gray-500/30";
   return (
-    <span className={`inline-flex items-center rounded-sm border px-2 py-0.5 text-xs font-medium ${cls}`}>
-      {status}
+    <span
+      className={`inline-flex items-center rounded-sm border px-2 py-0.5 text-xs font-medium ${cls}`}
+    >
+      {getStatusDisplayName(status as any) || status}
     </span>
   );
 }
@@ -71,7 +76,9 @@ export default function OpportunityTable({
             <tr>
               <th className="px-4 py-3 text-left font-semibold">Network ID</th>
               <th className="px-4 py-3 text-left font-semibold">Status</th>
-              <th className="px-4 py-3 text-left font-semibold">Profit Token</th>
+              <th className="px-4 py-3 text-left font-semibold">
+                Profit Token
+              </th>
               <th className="px-4 py-3 text-left">
                 <button
                   type="button"
@@ -114,8 +121,12 @@ export default function OpportunityTable({
                 role={onRowClick ? "button" : undefined}
               >
                 <td className="px-4 py-3 align-top">{r.network_id}</td>
-                <td className="px-4 py-3 align-top"><StatusBadge status={r.status} /></td>
-                <td className="px-4 py-3 align-top font-mono">{shorten(r.profit_token)}</td>
+                <td className="px-4 py-3 align-top">
+                  <StatusBadge status={r.status} />
+                </td>
+                <td className="px-4 py-3 align-top font-mono">
+                  {shorten(r.profit_token)}
+                </td>
                 <td className="px-4 py-3 align-top font-mono tabular-nums">
                   {r.profit_usd == null ? "N/A" : currency.format(r.profit_usd)}
                 </td>
@@ -123,10 +134,20 @@ export default function OpportunityTable({
                   {r.gas_usd == null ? "N/A" : currency.format(r.gas_usd)}
                 </td>
                 <td className="px-4 py-3 align-top">
-                  {new Date(r.created_at).toISOString().replace("T", " ").split(".")[0]}
+                  {
+                    new Date(r.created_at)
+                      .toISOString()
+                      .replace("T", " ")
+                      .split(".")[0]
+                  }
                 </td>
                 <td className="px-4 py-3 align-top">
-                  {new Date(r.updated_at).toISOString().replace("T", " ").split(".")[0]}
+                  {
+                    new Date(r.updated_at)
+                      .toISOString()
+                      .replace("T", " ")
+                      .split(".")[0]
+                  }
                 </td>
               </tr>
             ))}

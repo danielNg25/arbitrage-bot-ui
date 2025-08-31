@@ -19,29 +19,18 @@ export function createServer() {
   app.get("/api/demo", handleDemo);
   app.get("/api/v1/networks", handleNetworks);
 
-  const networks = [
-    { chain_id: 1, name: "Ethereum", total_profit_usd: 0, total_gas_usd: 0 },
-    { chain_id: 137, name: "Polygon", total_profit_usd: 0, total_gas_usd: 0 },
-    { chain_id: 56, name: "BSC", total_profit_usd: 0, total_gas_usd: 0 },
-    { chain_id: 42161, name: "Arbitrum", total_profit_usd: 0, total_gas_usd: 0 },
-    { chain_id: 10, name: "Optimism", total_profit_usd: 0, total_gas_usd: 0 },
-    { chain_id: 8453, name: "Base", total_profit_usd: 0, total_gas_usd: 0 },
-    { chain_id: 43114, name: "Avalanche", total_profit_usd: 0, total_gas_usd: 0 },
-  ];
-
-  app.get("/networks", (_req, res) => {
-    res.status(200).json(networks);
-  });
+  // Remove the old /networks endpoint since we now have /api/v1/networks
+  // app.get("/networks", ...) - removed
 
   app.get("/opportunities/:id", (req, res) => {
     const now = Date.now();
     const id = String(req.params.id);
-    const net = networks[0];
+    const net = { chain_id: 1, name: "Ethereum" };
     res.status(200).json({
       id,
       network_id: net.chain_id,
       source_pool: "0xabcDEF1234567890abcDEF12",
-      status: "executed",
+      status: "Succeeded",
       profit_token: "0xfeedbeef1234567890abcdef",
       profit_usd: 1234.56,
       gas_usd: 23.45,
@@ -81,26 +70,68 @@ export function createServer() {
 
   app.get("/tokens", (_req, res) => {
     res.status(200).json([
-      { address: "0x1111111111111111111111111111111111111111", name: "Token A", symbol: "TKA" },
-      { address: "0x3333333333333333333333333333333333333333", name: "Token B", symbol: "TKB" },
-      { address: "0xfeedbeef1234567890abcdef", name: "Profit Token", symbol: "PRFT" },
+      {
+        address: "0x1111111111111111111111111111111111111111",
+        name: "Token A",
+        symbol: "TKA",
+      },
+      {
+        address: "0x3333333333333333333333333333333333333333",
+        name: "Token B",
+        symbol: "TKB",
+      },
+      {
+        address: "0xfeedbeef1234567890abcdef",
+        name: "Profit Token",
+        symbol: "PRFT",
+      },
     ]);
   });
 
   app.get("/opportunities", (req, res) => {
     const count = 50;
-    const statuses = ["pending", "executed", "failed"] as const;
+    const statuses = [
+      "Succeeded",
+      "PartiallySucceeded",
+      "Reverted",
+      "Error",
+      "Skipped",
+    ] as const;
     const now = Date.now();
     const rows = Array.from({ length: count }).map((_, i) => {
-      const nid = networks[Math.floor(Math.random() * networks.length)].chain_id;
+      const nid = [1, 137, 56][Math.floor(Math.random() * 3)];
       const status = statuses[Math.floor(Math.random() * statuses.length)];
-      const profit = Math.random() > 0.15 ? Number((Math.random() * 2000 - 200).toFixed(2)) : null;
-      const gas = Math.random() > 0.1 ? Number((Math.random() * 50 + 1).toFixed(2)) : null;
-      const created = now - Math.floor(Math.random() * 30) * 86400000 - Math.floor(Math.random() * 86400000);
+      const profit =
+        Math.random() > 0.15
+          ? Number((Math.random() * 2000 - 200).toFixed(2))
+          : null;
+      const gas =
+        Math.random() > 0.1
+          ? Number((Math.random() * 50 + 1).toFixed(2))
+          : null;
+      const created =
+        now -
+        Math.floor(Math.random() * 30) * 86400000 -
+        Math.floor(Math.random() * 86400000);
       const updated = created + Math.floor(Math.random() * 6) * 3600000;
-      const token = "0x" + Array.from({ length: 40 }, () => Math.floor(Math.random() * 16).toString(16)).join("");
-      const id = Array.from({ length: 24 }, () => Math.floor(Math.random() * 16).toString(16)).join("");
-      return { id, network_id: nid, status, profit_token: token, profit_usd: profit, gas_usd: gas, created_at: created, updated_at: updated };
+      const token =
+        "0x" +
+        Array.from({ length: 40 }, () =>
+          Math.floor(Math.random() * 16).toString(16),
+        ).join("");
+      const id = Array.from({ length: 24 }, () =>
+        Math.floor(Math.random() * 16).toString(16),
+      ).join("");
+      return {
+        id,
+        network_id: nid,
+        status,
+        profit_token: token,
+        profit_usd: profit,
+        gas_usd: gas,
+        created_at: created,
+        updated_at: updated,
+      };
     });
 
     const q = req.query as Record<string, string | undefined>;

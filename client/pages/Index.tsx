@@ -46,9 +46,9 @@ function buildDummyOpportunities(): Opportunity[] {
       const created = new Date(
         now - dayOffset * 24 * 60 * 60 * 1000 - Math.random() * 86400000,
       );
-      const status = Math.random() > 0.2 ? "executed" : "skipped";
+      const status = Math.random() > 0.2 ? "Succeeded" : "Skipped";
       const profit =
-        status === "executed"
+        status === "Succeeded"
           ? Number((Math.random() * 2000 - 300).toFixed(2))
           : 0;
       const nets = [1, 137, 56, 42161, 10, 8453];
@@ -104,7 +104,7 @@ export default function Index() {
     const map = new Map<number, number>();
     const opps = oppsState.data || [];
     for (const o of opps)
-      if (o.status === "executed")
+      if (o.status === "Succeeded" || o.status === "PartiallySucceeded")
         map.set(o.network_id, (map.get(o.network_id) || 0) + 1);
     return map;
   }, [oppsState.data]);
@@ -113,14 +113,16 @@ export default function Index() {
     const map = new Map<number, number>();
     const opps = oppsState.data || [];
     for (const o of opps)
-      if (o.status === "failed")
+      if (o.status === "Reverted" || o.status === "Error")
         map.set(o.network_id, (map.get(o.network_id) || 0) + 1);
     return map;
   }, [oppsState.data]);
 
   const chartSeries: SeriesPoint[] = useMemo(() => {
     const opps = (oppsState.data || []).filter(
-      (o) => o.status === "executed" && typeof o.profit_usd === "number",
+      (o) =>
+        (o.status === "Succeeded" || o.status === "PartiallySucceeded") &&
+        typeof o.profit_usd === "number",
     );
     const buckets = new Map<string, number>();
     for (const d of lastNDays(30)) buckets.set(d.toISOString().slice(0, 10), 0);
