@@ -253,9 +253,9 @@ export default function Tracking() {
 
   const navigate = useNavigate();
 
-  // Convert OpportunityResponse to OpportunityRow for the table
+  // Convert OpportunityResponse to OpportunityRow for the table and apply sorting
   const tableRows: OpportunityRow[] = useMemo(() => {
-    return opportunities.map((opp) => {
+    let rows = opportunities.map((opp) => {
       // Find the network name for this opportunity
       const network = networks.find((n) => n.chain_id === opp.network_id);
       const networkName = network?.name || `Network ${opp.network_id}`;
@@ -281,7 +281,34 @@ export default function Tracking() {
         source_block_number: opp.source_block_number, // Add source block number
       };
     });
-  }, [opportunities, networks]);
+
+    // Apply sorting
+    rows.sort((a, b) => {
+      let aValue: number | string;
+      let bValue: number | string;
+
+      switch (sortKey) {
+        case "profit_usd":
+          aValue = a.profit_usd ?? 0;
+          bValue = b.profit_usd ?? 0;
+          break;
+        case "created_at":
+          aValue = a.created_at;
+          bValue = b.created_at;
+          break;
+        default:
+          return 0;
+      }
+
+      if (sortDir === "asc") {
+        return aValue > bValue ? 1 : aValue < bValue ? -1 : 0;
+      } else {
+        return aValue < bValue ? 1 : aValue > bValue ? -1 : 0;
+      }
+    });
+
+    return rows;
+  }, [opportunities, networks, sortKey, sortDir]);
 
   const onSortChange = (key: SortKey) => {
     if (sortKey === key) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
