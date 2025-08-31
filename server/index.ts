@@ -3,6 +3,7 @@ import express from "express";
 import cors from "cors";
 import { handleDemo } from "./routes/demo";
 import { handleNetworks } from "./routes/networks";
+import { handleOpportunities } from "./routes/opportunities";
 
 export function createServer() {
   const app = express();
@@ -18,6 +19,7 @@ export function createServer() {
 
   app.get("/api/demo", handleDemo);
   app.get("/api/v1/networks", handleNetworks);
+  app.get("/api/v1/opportunities", handleOpportunities);
 
   // Remove the old /networks endpoint since we now have /api/v1/networks
   // app.get("/networks", ...) - removed

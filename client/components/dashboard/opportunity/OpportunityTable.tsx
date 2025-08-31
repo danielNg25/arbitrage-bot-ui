@@ -5,15 +5,17 @@ import { getStatusDisplayName } from "@shared/api";
 export type OpportunityRow = {
   id?: string;
   network_id: number;
+  network_name: string; // Add network name for display
   status: "pending" | "executed" | "failed" | string;
   profit_token: string;
+  profit_token_symbol: string | null; // Add profit token symbol
   profit_usd: number | null;
   gas_usd: number | null;
   created_at: number; // unix ms
-  updated_at: number; // unix ms
+  source_block_number: number | null; // Add source block number
 };
 
-export type SortKey = "profit_usd" | "gas_usd" | "created_at";
+export type SortKey = "profit_usd" | "created_at";
 export type SortDir = "asc" | "desc";
 
 const currency = new Intl.NumberFormat("en-US", {
@@ -21,6 +23,30 @@ const currency = new Intl.NumberFormat("en-US", {
   currency: "USD",
   maximumFractionDigits: 2,
 });
+
+// Dynamic currency formatter for small amounts
+function formatCurrencyWithPrecision(amount: number): string {
+  const absAmount = Math.abs(amount);
+
+  if (absAmount >= 0.01) {
+    // For amounts >= $0.01, use 2 decimal places
+    return currency.format(amount);
+  } else if (absAmount >= 0.001) {
+    // For amounts >= $0.001, use 3 decimal places
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      minimumFractionDigits: 3,
+      maximumFractionDigits: 3,
+    }).format(amount);
+  } else if (absAmount > 0) {
+    // For amounts smaller than $0.001, show "--" to indicate not worth showing
+    return "--";
+  } else {
+    // For zero or negative amounts, use standard formatting
+    return currency.format(amount);
+  }
+}
 
 function shorten(addr: string) {
   if (!addr) return "";
@@ -71,33 +97,24 @@ export default function OpportunityTable({
   return (
     <div className="rounded-md border-2 border-border/60 bg-card shadow-md">
       <div className="overflow-x-auto">
-        <table className="min-w-[800px] w-full text-sm">
+        <table className="min-w-[900px] w-full text-sm">
           <thead className="bg-muted/10 text-muted-foreground">
             <tr>
-              <th className="px-4 py-3 text-left font-semibold">Network ID</th>
+              <th className="px-4 py-3 text-left font-semibold">Network</th>
               <th className="px-4 py-3 text-left font-semibold">Status</th>
-              <th className="px-4 py-3 text-left font-semibold">
-                Profit Token
-              </th>
+              <th className="px-4 py-3 text-left font-semibold">Token</th>
               <th className="px-4 py-3 text-left">
                 <button
                   type="button"
                   onClick={() => onSortChange("profit_usd")}
                   className="inline-flex items-center gap-1 font-semibold hover:text-foreground"
                 >
-                  Profit (USD)
+                  Net Profit (USD)
                   <SortIcon active={sortKey === "profit_usd"} dir={sortDir} />
                 </button>
               </th>
-              <th className="px-4 py-3 text-left">
-                <button
-                  type="button"
-                  onClick={() => onSortChange("gas_usd")}
-                  className="inline-flex items-center gap-1 font-semibold hover:text-foreground"
-                >
-                  Gas (USD)
-                  <SortIcon active={sortKey === "gas_usd"} dir={sortDir} />
-                </button>
+              <th className="px-4 py-3 text-left font-semibold">
+                Source Block
               </th>
               <th className="px-4 py-3 text-left">
                 <button
@@ -105,11 +122,10 @@ export default function OpportunityTable({
                   onClick={() => onSortChange("created_at")}
                   className="inline-flex items-center gap-1 font-semibold hover:text-foreground"
                 >
-                  Created At
+                  Source Block Timestamp
                   <SortIcon active={sortKey === "created_at"} dir={sortDir} />
                 </button>
               </th>
-              <th className="px-4 py-3 text-left font-semibold">Updated At</th>
             </tr>
           </thead>
           <tbody>
@@ -120,30 +136,48 @@ export default function OpportunityTable({
                 onClick={() => onRowClick?.(r)}
                 role={onRowClick ? "button" : undefined}
               >
-                <td className="px-4 py-3 align-top">{r.network_id}</td>
+                <td className="px-4 py-3 align-top">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-primary/60"></div>
+                    <div>
+                      <div className="font-medium">
+                        {r.network_name
+                          ? r.network_name.charAt(0).toUpperCase() +
+                            r.network_name.slice(1)
+                          : ""}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        ID: {r.network_id}
+                      </div>
+                    </div>
+                  </div>
+                </td>
                 <td className="px-4 py-3 align-top">
                   <StatusBadge status={r.status} />
                 </td>
-                <td className="px-4 py-3 align-top font-mono">
-                  {shorten(r.profit_token)}
+                <td className="px-4 py-3 align-top">
+                  <div>
+                    <div className="font-medium">
+                      {r.profit_token_symbol || "N/A"}
+                    </div>
+                    {!r.profit_token_symbol && (
+                      <div className="text-xs text-muted-foreground font-mono">
+                        {shorten(r.profit_token)}
+                      </div>
+                    )}
+                  </div>
                 </td>
                 <td className="px-4 py-3 align-top font-mono tabular-nums">
-                  {r.profit_usd == null ? "N/A" : currency.format(r.profit_usd)}
+                  {r.profit_usd == null || r.gas_usd == null
+                    ? "N/A"
+                    : formatCurrencyWithPrecision(r.profit_usd - r.gas_usd)}
                 </td>
                 <td className="px-4 py-3 align-top font-mono tabular-nums">
-                  {r.gas_usd == null ? "N/A" : currency.format(r.gas_usd)}
+                  {r.source_block_number || "N/A"}
                 </td>
                 <td className="px-4 py-3 align-top">
                   {
                     new Date(r.created_at)
-                      .toISOString()
-                      .replace("T", " ")
-                      .split(".")[0]
-                  }
-                </td>
-                <td className="px-4 py-3 align-top">
-                  {
-                    new Date(r.updated_at)
                       .toISOString()
                       .replace("T", " ")
                       .split(".")[0]

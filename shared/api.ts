@@ -24,17 +24,62 @@ export type OpportunityStatus =
 
 /**
  * Map opportunity status to shorter display names
+ * Handles both PascalCase (old) and lowercase (new API) status values
  */
-export function getStatusDisplayName(status: OpportunityStatus): string {
-  const statusMap: Record<OpportunityStatus, string> = {
-    Succeeded: "Success",
-    PartiallySucceeded: "Partial",
-    Reverted: "Reverted",
-    Error: "Error",
-    Skipped: "Skipped",
-    None: "None",
+export function getStatusDisplayName(status: string): string {
+  // Normalize status to handle both formats
+  const normalizedStatus = status.toLowerCase().replace(/_/g, "");
+
+  const statusMap: Record<string, string> = {
+    // Handle both formats
+    succeeded: "Success",
+    partiallysucceeded: "Partial",
+    partially_succeeded: "Partial",
+    reverted: "Reverted",
+    error: "Error",
+    skipped: "Skipped",
+    none: "None",
   };
-  return statusMap[status];
+
+  return (
+    statusMap[normalizedStatus] || statusMap[status.toLowerCase()] || status
+  );
+}
+
+/**
+ * Multiple statuses filter type
+ */
+export type MultipleStatusFilter = OpportunityStatus[];
+
+/**
+ * New opportunities API response structure
+ */
+export interface OpportunityResponse {
+  network_id: number;
+  status: string;
+  profit_usd: number | null;
+  gas_usd: number | null;
+  created_at: string; // ISO 8601 timestamp
+  source_tx: string | null;
+  source_block_number: number | null;
+  profit_token: string;
+  profit_token_name: string | null;
+  profit_token_symbol: string | null;
+  profit_token_decimals: number | null;
+}
+
+export interface PaginationInfo {
+  page: number;
+  limit: number;
+  total: number;
+  total_pages: number;
+  has_next: boolean;
+  has_prev: boolean;
+}
+
+export interface PaginatedOpportunitiesResponse {
+  opportunities: OpportunityResponse[];
+  pagination: PaginationInfo;
 }
 
 /**
