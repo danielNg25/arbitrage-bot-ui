@@ -7,13 +7,21 @@ export default function FilterControls({
   status,
   networkId,
   networks,
+  profitMin,
+  profitMax,
+  gasMin,
+  gasMax,
   onChange,
   onClear,
 }: {
   status: StatusFilter;
   networkId: number | "all";
   networks: { chain_id: number; name: string }[];
-  onChange: (v: { status?: StatusFilter; networkId?: number | "all" }) => void;
+  profitMin: number | "";
+  profitMax: number | "";
+  gasMin: number | "";
+  gasMax: number | "";
+  onChange: (v: { status?: StatusFilter; networkId?: number | "all"; profitMin?: number | ""; profitMax?: number | ""; gasMin?: number | ""; gasMax?: number | "" }) => void;
   onClear: () => void;
 }) {
   return (
@@ -47,6 +55,50 @@ export default function FilterControls({
             </option>
           ))}
         </select>
+      </div>
+      <div className="flex flex-col">
+        <label className="mb-1 text-xs text-muted-foreground">Profit (USD)</label>
+        <div className="flex items-center gap-2">
+          <input
+            type="number"
+            inputMode="decimal"
+            placeholder="Min"
+            className="h-10 w-28 rounded-md border-2 border-border/60 bg-background px-3 text-sm"
+            value={profitMin}
+            onChange={(e) => onChange({ profitMin: e.target.value === "" ? "" : Number(e.target.value) })}
+          />
+          <span className="text-xs text-muted-foreground">to</span>
+          <input
+            type="number"
+            inputMode="decimal"
+            placeholder="Max"
+            className="h-10 w-28 rounded-md border-2 border-border/60 bg-background px-3 text-sm"
+            value={profitMax}
+            onChange={(e) => onChange({ profitMax: e.target.value === "" ? "" : Number(e.target.value) })}
+          />
+        </div>
+      </div>
+      <div className="flex flex-col">
+        <label className="mb-1 text-xs text-muted-foreground">Gas (USD)</label>
+        <div className="flex items-center gap-2">
+          <input
+            type="number"
+            inputMode="decimal"
+            placeholder="Min"
+            className="h-10 w-28 rounded-md border-2 border-border/60 bg-background px-3 text-sm"
+            value={gasMin}
+            onChange={(e) => onChange({ gasMin: e.target.value === "" ? "" : Number(e.target.value) })}
+          />
+          <span className="text-xs text-muted-foreground">to</span>
+          <input
+            type="number"
+            inputMode="decimal"
+            placeholder="Max"
+            className="h-10 w-28 rounded-md border-2 border-border/60 bg-background px-3 text-sm"
+            value={gasMax}
+            onChange={(e) => onChange({ gasMax: e.target.value === "" ? "" : Number(e.target.value) })}
+          />
+        </div>
       </div>
       <div className="flex gap-2">
         <Button type="button" variant="outline" onClick={onClear}>

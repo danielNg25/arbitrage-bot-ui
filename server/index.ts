@@ -21,6 +21,10 @@ export function createServer() {
     { chain_id: 1, name: "Ethereum", total_profit_usd: 0, total_gas_usd: 0 },
     { chain_id: 137, name: "Polygon", total_profit_usd: 0, total_gas_usd: 0 },
     { chain_id: 56, name: "BSC", total_profit_usd: 0, total_gas_usd: 0 },
+    { chain_id: 42161, name: "Arbitrum", total_profit_usd: 0, total_gas_usd: 0 },
+    { chain_id: 10, name: "Optimism", total_profit_usd: 0, total_gas_usd: 0 },
+    { chain_id: 8453, name: "Base", total_profit_usd: 0, total_gas_usd: 0 },
+    { chain_id: 43114, name: "Avalanche", total_profit_usd: 0, total_gas_usd: 0 },
   ];
 
   app.get("/networks", (_req, res) => {
@@ -79,6 +83,45 @@ export function createServer() {
       { address: "0x3333333333333333333333333333333333333333", name: "Token B", symbol: "TKB" },
       { address: "0xfeedbeef1234567890abcdef", name: "Profit Token", symbol: "PRFT" },
     ]);
+  });
+
+  app.get("/opportunities", (req, res) => {
+    const count = 50;
+    const statuses = ["pending", "executed", "failed"] as const;
+    const now = Date.now();
+    const rows = Array.from({ length: count }).map((_, i) => {
+      const nid = networks[Math.floor(Math.random() * networks.length)].chain_id;
+      const status = statuses[Math.floor(Math.random() * statuses.length)];
+      const profit = Math.random() > 0.15 ? Number((Math.random() * 2000 - 200).toFixed(2)) : null;
+      const gas = Math.random() > 0.1 ? Number((Math.random() * 50 + 1).toFixed(2)) : null;
+      const created = now - Math.floor(Math.random() * 30) * 86400000 - Math.floor(Math.random() * 86400000);
+      const updated = created + Math.floor(Math.random() * 6) * 3600000;
+      const token = "0x" + Array.from({ length: 40 }, () => Math.floor(Math.random() * 16).toString(16)).join("");
+      const id = Array.from({ length: 24 }, () => Math.floor(Math.random() * 16).toString(16)).join("");
+      return { id, network_id: nid, status, profit_token: token, profit_usd: profit, gas_usd: gas, created_at: created, updated_at: updated };
+    });
+
+    const q = req.query as Record<string, string | undefined>;
+    const networkId = q.network_id ? Number(q.network_id) : null;
+    const statusQ = q.status ?? null;
+    const profitMin = q.profit_min ? Number(q.profit_min) : null;
+    const profitMax = q.profit_max ? Number(q.profit_max) : null;
+    const gasMin = q.gas_min ? Number(q.gas_min) : null;
+    const gasMax = q.gas_max ? Number(q.gas_max) : null;
+
+    const filtered = rows.filter((r) => {
+      if (networkId != null && r.network_id !== networkId) return false;
+      if (statusQ && r.status !== statusQ) return false;
+      const p = r.profit_usd;
+      if (profitMin != null && (p == null || p < profitMin)) return false;
+      if (profitMax != null && (p == null || p > profitMax)) return false;
+      const g = r.gas_usd;
+      if (gasMin != null && (g == null || g < gasMin)) return false;
+      if (gasMax != null && (g == null || g > gasMax)) return false;
+      return true;
+    });
+
+    res.status(200).json(filtered);
   });
 
   return app;

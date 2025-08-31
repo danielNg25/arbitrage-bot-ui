@@ -75,10 +75,7 @@ export default function DebugInsights() {
   useEffect(() => {
     (async () => {
       try {
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 6000);
-        const res = await fetch("/tokens", { signal: controller.signal });
-        clearTimeout(timeout);
+        const res = await fetch("/tokens");
         if (!res.ok) throw new Error("tokens");
         const rows = (await res.json()) as Array<{ address: string; name?: string | null; symbol?: string | null; network_id?: number }>;
         const map: Record<string, { name?: string | null; symbol?: string | null }> = {};

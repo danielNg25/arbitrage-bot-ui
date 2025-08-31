@@ -41,6 +41,10 @@ export default function Tracking() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [rows, setRows] = useState<OpportunityRow[]>([]);
+  const [profitMin, setProfitMin] = useState<number | "">("");
+  const [profitMax, setProfitMax] = useState<number | "">("");
+  const [gasMin, setGasMin] = useState<number | "">("");
+  const [gasMax, setGasMax] = useState<number | "">("");
 
   useEffect(() => {
     (async () => {
@@ -62,10 +66,11 @@ export default function Tracking() {
       const params = new URLSearchParams();
       if (networkId !== "all") params.set("network_id", String(networkId));
       if (status !== "all") params.set("status", status);
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 6000);
-      const res = await fetch(`/opportunities${params.toString() ? `?${params.toString()}` : ""}`, { signal: controller.signal });
-      clearTimeout(timeout);
+      if (profitMin !== "") params.set("profit_min", String(profitMin));
+      if (profitMax !== "") params.set("profit_max", String(profitMax));
+      if (gasMin !== "") params.set("gas_min", String(gasMin));
+      if (gasMax !== "") params.set("gas_max", String(gasMax));
+      const res = await fetch(`/opportunities${params.toString() ? `?${params.toString()}` : ""}`);
       if (!res.ok) throw new Error("API unavailable");
       const data = (await res.json()) as OpportunityRow[];
       setRows(data);
@@ -74,7 +79,7 @@ export default function Tracking() {
     } finally {
       setLoading(false);
     }
-  }, [networkId, status, networks]);
+  }, [networkId, status, profitMin, profitMax, gasMin, gasMax, networks]);
 
   useEffect(() => {
     fetchRows();
@@ -83,7 +88,22 @@ export default function Tracking() {
   const navigate = useNavigate();
 
   const sorted = useMemo(() => {
-    const arr = rows.filter((r) => (networkId === "all" || r.network_id === networkId) && (status === "all" || r.status === status));
+    const inProfitRange = (v: number | null) => {
+      if (profitMin !== "" && (v == null || v < profitMin)) return false;
+      if (profitMax !== "" && (v == null || v > profitMax)) return false;
+      return true;
+    };
+    const inGasRange = (v: number | null) => {
+      if (gasMin !== "" && (v == null || v < gasMin)) return false;
+      if (gasMax !== "" && (v == null || v > gasMax)) return false;
+      return true;
+    };
+    const arr = rows.filter((r) =>
+      (networkId === "all" || r.network_id === networkId) &&
+      (status === "all" || r.status === status) &&
+      inProfitRange(r.profit_usd ?? null) &&
+      inGasRange(r.gas_usd ?? null)
+    );
     arr.sort((a, b) => {
       const dir = sortDir === "asc" ? 1 : -1;
       if (sortKey === "created_at") return dir * (a.created_at - b.created_at);
@@ -92,7 +112,7 @@ export default function Tracking() {
       return dir * (av - bv);
     });
     return arr;
-  }, [rows, networkId, status, sortKey, sortDir]);
+  }, [rows, networkId, status, profitMin, profitMax, gasMin, gasMax, sortKey, sortDir]);
 
   const paged = useMemo(() => {
     const start = page * pageSize;
@@ -115,14 +135,26 @@ export default function Tracking() {
           status={status}
           networkId={networkId}
           networks={networks.map((n) => ({ chain_id: n.chain_id, name: n.name }))}
+          profitMin={profitMin}
+          profitMax={profitMax}
+          gasMin={gasMin}
+          gasMax={gasMax}
           onChange={(v) => {
             if (v.status) setStatus(v.status);
             if (typeof v.networkId !== "undefined") setNetworkId(v.networkId);
+            if (typeof v.profitMin !== "undefined") setProfitMin(v.profitMin);
+            if (typeof v.profitMax !== "undefined") setProfitMax(v.profitMax);
+            if (typeof v.gasMin !== "undefined") setGasMin(v.gasMin);
+            if (typeof v.gasMax !== "undefined") setGasMax(v.gasMax);
             setPage(0);
           }}
           onClear={() => {
             setStatus("all");
             setNetworkId("all");
+            setProfitMin("");
+            setProfitMax("");
+            setGasMin("");
+            setGasMax("");
             setPage(0);
           }}
         />

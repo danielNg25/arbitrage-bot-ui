@@ -45,6 +45,7 @@ function buildDummyData(): { networks: Network[]; opportunities: Opportunity[] }
     { chain_id: 42161, name: "Arbitrum", total_profit_usd: 31231.12, total_gas_usd: 5123.44 },
     { chain_id: 10, name: "Optimism", total_profit_usd: 28344.77, total_gas_usd: 4011.32 },
     { chain_id: 8453, name: "Base", total_profit_usd: 22111.95, total_gas_usd: 2987.41 },
+    { chain_id: 43114, name: "Avalanche", total_profit_usd: 20111.5, total_gas_usd: 2500.12 },
   ];
   const now = Date.now();
   const opportunities: Opportunity[] = Array.from({ length: 50 }).map((_, i) => {
@@ -67,13 +68,10 @@ export default function Index() {
     setNetworks((s) => ({ ...s, loading: true, error: null }));
     setOpps((s) => ({ ...s, loading: true, error: null }));
     try {
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 6000);
       const [netsRes, oppsRes] = await Promise.all([
-        fetch("/networks", { signal: controller.signal }),
-        fetch("/opportunities", { signal: controller.signal }),
+        fetch("/networks"),
+        fetch("/opportunities"),
       ]);
-      clearTimeout(timeout);
       if (!netsRes.ok || !oppsRes.ok) throw new Error("API unavailable");
       const [nets, opps] = await Promise.all([netsRes.json(), oppsRes.json()]);
       setNetworks({ data: nets as Network[], loading: false, error: null });
@@ -89,10 +87,17 @@ export default function Index() {
 
   useEffect(() => { load(); }, [load]);
 
-  const executedCountByNetwork = useMemo(() => {
+  const successByNetwork = useMemo(() => {
     const map = new Map<number, number>();
     const opps = oppsState.data || [];
     for (const o of opps) if (o.status === "executed") map.set(o.network_id, (map.get(o.network_id) || 0) + 1);
+    return map;
+  }, [oppsState.data]);
+
+  const failedByNetwork = useMemo(() => {
+    const map = new Map<number, number>();
+    const opps = oppsState.data || [];
+    for (const o of opps) if (o.status === "failed") map.set(o.network_id, (map.get(o.network_id) || 0) + 1);
     return map;
   }, [oppsState.data]);
 
@@ -127,15 +132,25 @@ export default function Index() {
         <h3 className="text-base font-semibold tracking-tight">Network Metrics</h3>
         {loading ? (
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3">
-            {Array.from({ length: 6 }).map((_, i) => (
+            {Array.from({ length: 7 }).map((_, i) => (
               <div key={i} className="h-36 animate-pulse rounded-md border-2 border-border/60 bg-card" />
             ))}
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 max-h-[420px] overflow-y-auto pr-1">
-            {(networksState.data || []).map((net) => (
-              <NetworkCard key={net.chain_id} network={net} executedCount={executedCountByNetwork.get(net.chain_id) || 0} />
-            ))}
+            {(networksState.data || []).map((net) => {
+              const success = successByNetwork.get(net.chain_id) || 0;
+              const failed = failedByNetwork.get(net.chain_id) || 0;
+              return (
+                <NetworkCard
+                  key={net.chain_id}
+                  network={net}
+                  executedCount={success + failed}
+                  successCount={success}
+                  failedCount={failed}
+                />
+              );
+            })}
           </div>
         )}
       </section>
