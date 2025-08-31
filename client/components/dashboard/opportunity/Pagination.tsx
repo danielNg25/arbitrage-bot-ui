@@ -14,14 +14,20 @@ export default function Pagination({
   total,
   onPageChange,
   onPageSizeChange,
+  currentPage,
+  totalPages: propTotalPages,
+  onDirectPageChange,
 }: {
   page: number; // zero-based
   pageSize: number;
   total: number;
   onPageChange: (next: number) => void;
   onPageSizeChange: (newPageSize: number) => void;
+  currentPage?: number; // 1-based current page
+  totalPages?: number; // total pages from API
+  onDirectPageChange?: (page: number) => void; // direct page navigation
 }) {
-  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const totalPages = propTotalPages || Math.max(1, Math.ceil(total / pageSize));
   const canPrev = page > 0;
   const canNext = page + 1 < totalPages;
 
@@ -52,7 +58,7 @@ export default function Pagination({
           </Select>
         </div>
       </div>
-      <div className="flex gap-2">
+      <div className="flex items-center gap-2">
         <Button
           type="button"
           variant="outline"
@@ -61,6 +67,46 @@ export default function Pagination({
         >
           Previous
         </Button>
+
+        {/* Direct Page Input */}
+        {onDirectPageChange && currentPage && (
+          <div className="flex items-center gap-1 text-xs">
+            <span className="text-muted-foreground">Page</span>
+            <input
+              type="number"
+              min="1"
+              max={totalPages}
+              value={currentPage}
+              onChange={(e) => {
+                const newPage = parseInt(e.target.value);
+                if (newPage >= 1 && newPage <= totalPages) {
+                  onDirectPageChange(newPage);
+                }
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  const newPage = parseInt(e.currentTarget.value);
+                  if (newPage >= 1 && newPage <= totalPages) {
+                    onDirectPageChange(newPage);
+                  }
+                }
+              }}
+              onBlur={(e) => {
+                // Validate and correct the value when input loses focus
+                const newPage = parseInt(e.target.value);
+                if (isNaN(newPage) || newPage < 1) {
+                  e.target.value = String(currentPage);
+                } else if (newPage > totalPages) {
+                  e.target.value = String(totalPages);
+                }
+              }}
+              className="w-12 px-1 py-1 text-center border rounded text-xs text-black focus:outline-none focus:ring-1 focus:ring-primary/20"
+              placeholder={String(currentPage)}
+            />
+            <span className="text-muted-foreground">of {totalPages}</span>
+          </div>
+        )}
+
         <Button
           type="button"
           variant="outline"

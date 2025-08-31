@@ -195,9 +195,7 @@ export default function Tracking() {
         params.set("max_created_at", timestampTo);
       }
 
-      const res = await fetch(
-        `/api/v1/opportunities${params.toString() ? `?${params.toString()}` : ""}`,
-      );
+      const res = await fetch(`/api/v1/opportunities?${params.toString()}`);
 
       if (!res.ok) {
         if (res.status === 503) {
@@ -207,6 +205,12 @@ export default function Tracking() {
       }
 
       const data = await res.json();
+      console.log(`API Response - Page ${page}, Limit ${pageSize}:`, {
+        opportunitiesCount: data.opportunities?.length || 0,
+        pagination: data.pagination,
+        url: `/api/v1/opportunities?${params.toString()}`,
+      });
+
       setOpportunities(data.opportunities || []);
       setPagination(data.pagination || null);
       setLastUpdated(new Date());
@@ -310,6 +314,11 @@ export default function Tracking() {
     return rows;
   }, [opportunities, networks, sortKey, sortDir]);
 
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setPage(1);
+  }, [networkId, status, profitMin, profitMax, timestampFrom, timestampTo]);
+
   const onSortChange = (key: SortKey) => {
     if (sortKey === key) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
     else {
@@ -324,7 +333,8 @@ export default function Tracking() {
   };
 
   const onPageChange = (newPage: number) => {
-    setPage(newPage);
+    // Convert from 0-based to 1-based for API
+    setPage(newPage + 1);
   };
 
   return (
@@ -408,11 +418,14 @@ export default function Tracking() {
           {pagination && (
             <div className="pt-3">
               <Pagination
-                page={pagination.page - 1} // Convert to 0-based for component
+                page={pagination.page - 1} // Use API pagination data
                 pageSize={pagination.limit}
                 total={pagination.total}
                 onPageChange={onPageChange}
                 onPageSizeChange={onPageSizeChange}
+                currentPage={page}
+                totalPages={pagination.total_pages || 1}
+                onDirectPageChange={setPage}
               />
             </div>
           )}

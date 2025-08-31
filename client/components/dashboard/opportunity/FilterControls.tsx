@@ -64,14 +64,24 @@ export default function FilterControls({
     }
   };
 
-  // Helper function to convert Unix timestamp to readable date
-  const formatUnixTimestamp = (unixTimestamp: string): string => {
+  // Helper function to convert Unix timestamp to datetime-local format
+  const convertUnixToDatetimeLocal = (unixTimestamp: string): string => {
     if (!unixTimestamp) return "";
     try {
       const date = new Date(parseInt(unixTimestamp) * 1000);
-      return date.toLocaleString();
+      // Format as YYYY-MM-DDTHH:MM for datetime-local input
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+      const hours = String(date.getHours()).padStart(2, "0");
+      const minutes = String(date.getMinutes()).padStart(2, "0");
+      return `${year}-${month}-${day}T${hours}:${minutes}`;
     } catch (error) {
-      return unixTimestamp;
+      console.error(
+        "Error converting Unix timestamp to datetime-local:",
+        error,
+      );
+      return "";
     }
   };
 
@@ -151,32 +161,56 @@ export default function FilterControls({
       <div className="flex flex-col">
         <label className="mb-1 text-xs text-muted-foreground">Created At</label>
         <div className="flex items-center gap-2">
-          <input
-            type="datetime-local"
-            className="h-10 w-40 rounded-md border-2 border-border/60 bg-background px-3 text-sm"
-            value={timestampFrom}
-            onChange={(e) => {
-              const unixTimestamp = convertToUnixTimestamp(e.target.value);
-              onChange({ timestampFrom: unixTimestamp });
-            }}
-          />
-          <span className="text-xs text-muted-foreground">to</span>
-          <input
-            type="datetime-local"
-            className="h-10 w-40 rounded-md border-2 border-border/60 bg-background px-3 text-sm"
-            value={timestampTo}
-            onChange={(e) => {
-              const unixTimestamp = convertToUnixTimestamp(e.target.value);
-              onChange({ timestampTo: unixTimestamp });
-            }}
-          />
-        </div>
-        {(timestampFrom || timestampTo) && (
-          <div className="text-xs text-muted-foreground mt-1">
-            Unix timestamps: {timestampFrom || "none"} to{" "}
-            {timestampTo || "none"}
+          <div className="relative">
+            <input
+              id="datetime-from"
+              type="datetime-local"
+              className="h-10 w-41 rounded-l-md border-2 border-r-0 border-primary/50 bg-background px-3 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+              value={convertUnixToDatetimeLocal(timestampFrom)}
+              onChange={(e) => {
+                const unixTimestamp = convertToUnixTimestamp(e.target.value);
+                onChange({ timestampFrom: unixTimestamp });
+              }}
+            />
+            <button
+              type="button"
+              className="absolute right-0 top-0 h-10 w-10 rounded-r-md border-2 border-l-0 border-primary/50 bg-primary/10 hover:bg-primary/20 flex items-center justify-center"
+              onClick={() => {
+                const input = document.getElementById(
+                  "datetime-from",
+                ) as HTMLInputElement;
+                if (input) input.showPicker();
+              }}
+            >
+              📅
+            </button>
           </div>
-        )}
+          <span className="text-xs text-muted-foreground">to</span>
+          <div className="relative">
+            <input
+              id="datetime-to"
+              type="datetime-local"
+              className="h-10 w-41 rounded-l-md border-2 border-r-0 border-primary/50 bg-background px-3 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+              value={convertUnixToDatetimeLocal(timestampTo)}
+              onChange={(e) => {
+                const unixTimestamp = convertToUnixTimestamp(e.target.value);
+                onChange({ timestampTo: unixTimestamp });
+              }}
+            />
+            <button
+              type="button"
+              className="absolute right-0 top-0 h-10 w-10 rounded-r-md border-2 border-l-0 border-primary/50 bg-primary/10 hover:bg-primary/20 flex items-center justify-center"
+              onClick={() => {
+                const input = document.getElementById(
+                  "datetime-to",
+                ) as HTMLInputElement;
+                if (input) input.showPicker();
+              }}
+            >
+              📅
+            </button>
+          </div>
+        </div>
       </div>
       <div className="flex gap-2">
         <Button type="button" variant="outline" onClick={onClear}>
