@@ -2,6 +2,7 @@ import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import { handleDemo } from "./routes/demo";
+import { handleNetworks } from "./routes/networks";
 
 export function createServer() {
   const app = express();
@@ -16,6 +17,7 @@ export function createServer() {
   });
 
   app.get("/api/demo", handleDemo);
+  app.get("/api/v1/networks", handleNetworks);
 
   const networks = [
     { chain_id: 1, name: "Ethereum", total_profit_usd: 0, total_gas_usd: 0 },

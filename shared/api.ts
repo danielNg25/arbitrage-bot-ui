@@ -10,3 +10,29 @@
 export interface DemoResponse {
   message: string;
 }
+
+/**
+ * Network interface matching the API response
+ */
+export interface Network {
+  chain_id: number;
+  name: string;
+  rpc: string;
+  block_explorer: string | null;
+  executed: number | null;
+  success: number | null;
+  failed: number | null;
+  total_profit_usd: number;
+  total_gas_usd: number;
+  last_proccesed_created_at: string | null;
+  created_at: number;
+  executed_opportunities: number;
+  success_rate: number | null;
+}
+
+/**
+ * Response type for /api/v1/networks
+ */
+export interface NetworksResponse {
+  networks: Network[];
+}
