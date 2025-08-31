@@ -1,6 +1,12 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import OpportunityTable, { type OpportunityRow, type SortDir, type SortKey } from "@/components/dashboard/opportunity/OpportunityTable";
-import FilterControls, { type StatusFilter } from "@/components/dashboard/opportunity/FilterControls";
+import OpportunityTable, {
+  type OpportunityRow,
+  type SortDir,
+  type SortKey,
+} from "@/components/dashboard/opportunity/OpportunityTable";
+import FilterControls, {
+  type StatusFilter,
+} from "@/components/dashboard/opportunity/FilterControls";
 import Pagination from "@/components/dashboard/opportunity/Pagination";
 import type { Network } from "@/components/dashboard/NetworkCard";
 import { useNavigate } from "react-router-dom";
@@ -20,13 +26,35 @@ function buildDummyOpps(nets: Network[], count = 50): OpportunityRow[] {
   return Array.from({ length: count }).map((_, i) => {
     const nid = networks[Math.floor(Math.random() * networks.length)].chain_id;
     const status = statuses[Math.floor(Math.random() * statuses.length)];
-    const profit = Math.random() > 0.15 ? Number((Math.random() * 2000 - 200).toFixed(2)) : null;
-    const gas = Math.random() > 0.1 ? Number((Math.random() * 50 + 1).toFixed(2)) : null;
-    const created = now - Math.floor(Math.random() * 30) * 86400000 - Math.floor(Math.random() * 86400000);
+    const profit =
+      Math.random() > 0.15
+        ? Number((Math.random() * 2000 - 200).toFixed(2))
+        : null;
+    const gas =
+      Math.random() > 0.1 ? Number((Math.random() * 50 + 1).toFixed(2)) : null;
+    const created =
+      now -
+      Math.floor(Math.random() * 30) * 86400000 -
+      Math.floor(Math.random() * 86400000);
     const updated = created + Math.floor(Math.random() * 6) * 3600000;
-    const token = "0x" + Array.from({ length: 40 }, () => Math.floor(Math.random() * 16).toString(16)).join("");
-    const id = Array.from({ length: 24 }, () => Math.floor(Math.random() * 16).toString(16)).join("");
-    return { id, network_id: nid, status, profit_token: token, profit_usd: profit, gas_usd: gas, created_at: created, updated_at: updated };
+    const token =
+      "0x" +
+      Array.from({ length: 40 }, () =>
+        Math.floor(Math.random() * 16).toString(16),
+      ).join("");
+    const id = Array.from({ length: 24 }, () =>
+      Math.floor(Math.random() * 16).toString(16),
+    ).join("");
+    return {
+      id,
+      network_id: nid,
+      status,
+      profit_token: token,
+      profit_usd: profit,
+      gas_usd: gas,
+      created_at: created,
+      updated_at: updated,
+    };
   });
 }
 
@@ -37,7 +65,7 @@ export default function Tracking() {
   const [sortKey, setSortKey] = useState<SortKey>("created_at");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [page, setPage] = useState(0);
-  const pageSize = 10;
+  const [pageSize, setPageSize] = useState(10);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [rows, setRows] = useState<OpportunityRow[]>([]);
@@ -70,7 +98,9 @@ export default function Tracking() {
       if (profitMax !== "") params.set("profit_max", String(profitMax));
       if (gasMin !== "") params.set("gas_min", String(gasMin));
       if (gasMax !== "") params.set("gas_max", String(gasMax));
-      const res = await fetch(`/opportunities${params.toString() ? `?${params.toString()}` : ""}`);
+      const res = await fetch(
+        `/opportunities${params.toString() ? `?${params.toString()}` : ""}`,
+      );
       if (!res.ok) throw new Error("API unavailable");
       const data = (await res.json()) as OpportunityRow[];
       setRows(data);
@@ -98,11 +128,12 @@ export default function Tracking() {
       if (gasMax !== "" && (v == null || v > gasMax)) return false;
       return true;
     };
-    const arr = rows.filter((r) =>
-      (networkId === "all" || r.network_id === networkId) &&
-      (status === "all" || r.status === status) &&
-      inProfitRange(r.profit_usd ?? null) &&
-      inGasRange(r.gas_usd ?? null)
+    const arr = rows.filter(
+      (r) =>
+        (networkId === "all" || r.network_id === networkId) &&
+        (status === "all" || r.status === status) &&
+        inProfitRange(r.profit_usd ?? null) &&
+        inGasRange(r.gas_usd ?? null),
     );
     arr.sort((a, b) => {
       const dir = sortDir === "asc" ? 1 : -1;
@@ -112,12 +143,22 @@ export default function Tracking() {
       return dir * (av - bv);
     });
     return arr;
-  }, [rows, networkId, status, profitMin, profitMax, gasMin, gasMax, sortKey, sortDir]);
+  }, [
+    rows,
+    networkId,
+    status,
+    profitMin,
+    profitMax,
+    gasMin,
+    gasMax,
+    sortKey,
+    sortDir,
+  ]);
 
   const paged = useMemo(() => {
     const start = page * pageSize;
     return sorted.slice(start, start + pageSize);
-  }, [sorted, page]);
+  }, [sorted, page, pageSize]);
 
   const onSortChange = (key: SortKey) => {
     if (sortKey === key) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
@@ -127,14 +168,24 @@ export default function Tracking() {
     }
   };
 
+  const onPageSizeChange = (newPageSize: number) => {
+    setPageSize(newPageSize);
+    setPage(0); // Reset to first page when changing page size
+  };
+
   return (
     <section aria-label="Opportunity Tracking" className="space-y-3">
-      <h2 className="text-lg font-semibold tracking-tight">Opportunity Tracking</h2>
+      <h2 className="text-lg font-semibold tracking-tight">
+        Opportunity Tracking
+      </h2>
       <div className="rounded-md border-2 border-border/60 bg-card p-4 shadow-md">
         <FilterControls
           status={status}
           networkId={networkId}
-          networks={networks.map((n) => ({ chain_id: n.chain_id, name: n.name }))}
+          networks={networks.map((n) => ({
+            chain_id: n.chain_id,
+            name: n.name,
+          }))}
           profitMin={profitMin}
           profitMax={profitMax}
           gasMin={gasMin}
@@ -163,15 +214,29 @@ export default function Tracking() {
       {loading ? (
         <div className="h-48 animate-pulse rounded-md border-2 border-border/60 bg-card" />
       ) : error ? (
-        <div className="rounded-md border border-destructive bg-destructive/10 px-4 py-3 text-sm text-destructive-foreground">{error}</div>
+        <div className="rounded-md border border-destructive bg-destructive/10 px-4 py-3 text-sm text-destructive-foreground">
+          {error}
+        </div>
       ) : (
         <>
-          <OpportunityTable rows={paged} sortKey={sortKey} sortDir={sortDir} onSortChange={onSortChange} onRowClick={(r) => {
-            const rid = r.id || String(r.created_at);
-            navigate(`/opportunities/${rid}`);
-          }} />
+          <OpportunityTable
+            rows={paged}
+            sortKey={sortKey}
+            sortDir={sortDir}
+            onSortChange={onSortChange}
+            onRowClick={(r) => {
+              const rid = r.id || String(r.created_at);
+              navigate(`/opportunities/${rid}`);
+            }}
+          />
           <div className="pt-3">
-            <Pagination page={page} pageSize={pageSize} total={sorted.length} onPageChange={setPage} />
+            <Pagination
+              page={page}
+              pageSize={pageSize}
+              total={sorted.length}
+              onPageChange={setPage}
+              onPageSizeChange={onPageSizeChange}
+            />
           </div>
         </>
       )}
