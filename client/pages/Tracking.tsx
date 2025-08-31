@@ -166,16 +166,18 @@ export default function Tracking() {
 
       // Add filters
       if (networkId !== "all") params.set("network_id", String(networkId));
-      if (status !== "all" && Array.isArray(status)) {
-        // Handle multiple statuses - add each one as a separate statuses parameter
-        status.forEach((s) => {
+      if (status !== "all") {
+        if (status === "Profitable") {
+          // For profitable filter, set min_profit_usd to 0.001 (anything above 0)
+          params.set("min_profit_usd", "0.001");
+        } else {
           // Convert status to lowercase to match API spec
-          const apiStatus = s
+          const apiStatus = status
             .toLowerCase()
             .replace(/([A-Z])/g, "_$1")
             .toLowerCase();
-          params.append("statuses", apiStatus);
-        });
+          params.set("status", apiStatus);
+        }
       }
       // Note: profit_usd field is actually revenue, so we filter by revenue
       // The actual net profit (revenue - gas) is calculated in the UI

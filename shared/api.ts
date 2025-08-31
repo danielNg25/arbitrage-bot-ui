@@ -23,13 +23,18 @@ export type OpportunityStatus =
   | "None"; // No status
 
 /**
+ * Status filter type - supports individual statuses plus "Profitable" option
+ */
+export type StatusFilter = "all" | OpportunityStatus | "Profitable";
+
+/**
  * Map opportunity status to shorter display names
  * Handles both PascalCase (old) and lowercase (new API) status values
  */
 export function getStatusDisplayName(status: string): string {
   // Normalize status to handle both formats
   const normalizedStatus = status.toLowerCase().replace(/_/g, "");
-
+  
   const statusMap: Record<string, string> = {
     // Handle both formats
     succeeded: "Success",
@@ -40,16 +45,11 @@ export function getStatusDisplayName(status: string): string {
     skipped: "Skipped",
     none: "None",
   };
-
+  
   return (
     statusMap[normalizedStatus] || statusMap[status.toLowerCase()] || status
   );
 }
-
-/**
- * Multiple statuses filter type
- */
-export type MultipleStatusFilter = OpportunityStatus[];
 
 /**
  * New opportunities API response structure

@@ -9,7 +9,6 @@ export const handleOpportunities: RequestHandler = async (req, res) => {
       limit = "100",
       network_id,
       status,
-      statuses, // New parameter for multiple statuses
       min_profit_usd,
       max_profit_usd,
     } = req.query;
@@ -25,16 +24,8 @@ export const handleOpportunities: RequestHandler = async (req, res) => {
 
     if (network_id) params.set("network_id", String(network_id));
 
-    // Handle status filtering - prefer statuses over status for backward compatibility
-    if (statuses) {
-      // Handle multiple statuses
-      if (Array.isArray(statuses)) {
-        statuses.forEach((s) => params.append("statuses", String(s)));
-      } else {
-        params.append("statuses", String(statuses));
-      }
-    } else if (status) {
-      // Handle single status for backward compatibility
+    // Handle status filtering
+    if (status) {
       params.set("status", String(status));
     }
 
