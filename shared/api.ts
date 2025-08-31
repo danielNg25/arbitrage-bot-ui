@@ -55,6 +55,7 @@ export function getStatusDisplayName(status: string): string {
  * New opportunities API response structure
  */
 export interface OpportunityResponse {
+  id?: string; // MongoDB ObjectId for the opportunity (optional until API is updated)
   network_id: number;
   status: string;
   profit_usd: number | null;
@@ -106,4 +107,92 @@ export interface Network {
  */
 export interface NetworksResponse {
   networks: Network[];
+}
+
+// New types for opportunity details
+export interface OpportunityDetails {
+  network_id: number;
+  status: string;
+  profit_usd: number | null;
+  profit_amount: string;
+  gas_usd: number | null;
+  created_at: string; // ISO 8601 timestamp
+  source_tx: string;
+  source_block_number: number;
+  execute_block_number: number;
+  profit_token: string;
+  profit_token_name: string;
+  profit_token_symbol: string;
+  profit_token_decimals: number;
+}
+
+export interface NetworkDetails {
+  chain_id: number;
+  name: string;
+  rpc: string;
+  block_explorer: string;
+  executed: number;
+  success: number;
+  failed: number;
+  total_profit_usd: number;
+  total_gas_usd: number;
+  last_proccesed_created_at: number; // Unix timestamp
+  created_at: number; // Unix timestamp
+  success_rate: number;
+}
+
+export interface PathToken {
+  address: string;
+  name: string;
+  symbol: string;
+  decimals: number;
+  price: number | null;
+}
+
+export interface PathPool {
+  address: string;
+  pool_type: string;
+  tokens: string[];
+}
+
+export interface OpportunityDetailsResponse {
+  opportunity: OpportunityDetails;
+  network: NetworkDetails;
+  path_tokens: PathToken[];
+  path_pools: PathPool[];
+}
+
+// Legacy types for backward compatibility with DebugInsights page
+export interface OpportunityDetail {
+  id: string;
+  network_id: number;
+  source_pool: string;
+  status: string;
+  profit_token: string;
+  profit_usd: number;
+  gas_usd: number;
+  created_at: number;
+  updated_at: number;
+  source_block_number: number;
+  source_block_timestamp: number;
+  source_tx: string;
+  source_log_index: number;
+  execute_block_number: number;
+  execute_tx: string;
+  amount: string;
+  profit: string;
+  gas_token_amount: string;
+}
+
+export interface OpportunityDebug {
+  id: string;
+  estimate_profit_usd: number;
+  estimate_profit_token_amount: string;
+  gas_amount: number;
+  gas_price: number;
+  simulation_time: number;
+  path: string[];
+  received_at: number;
+  send_at: number;
+  error: string | null;
 }

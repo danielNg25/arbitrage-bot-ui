@@ -273,7 +273,7 @@ export default function Tracking() {
       }
 
       return {
-        id: opp.source_tx || opp.profit_token,
+        id: opp.id || opp.source_tx || opp.profit_token,
         network_id: opp.network_id,
         network_name: networkName, // Add network name for display
         status: opp.status,

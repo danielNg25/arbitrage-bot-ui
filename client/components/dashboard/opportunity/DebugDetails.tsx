@@ -1,5 +1,4 @@
 import React from "react";
-import { getStatusDisplayName } from "@shared/api";
 
 export type OpportunityDetail = {
   id?: string | null;
@@ -91,11 +90,13 @@ function LinkAddr({
 }: {
   addr?: string | null;
   base: string;
-  kind?: "address" | "tx";
+  kind?: "address" | "tx" | "token";
   labelClass?: string;
 }) {
   if (!addr) return <span>N/A</span>;
-  const href = `${base}/${kind}/${addr}`;
+  // Map token kind to address for block explorer compatibility
+  const explorerKind = kind === "token" ? "address" : kind;
+  const href = `${base}/${explorerKind}/${addr}`;
   return (
     <a
       href={href}
@@ -130,27 +131,36 @@ export default function DebugDetails({
   dbg,
   networkName,
   tokenMeta = {},
+  profitTokenDecimals = 18,
+  blockExplorer,
 }: {
   opp: OpportunityDetail;
   dbg: OpportunityDebug | null;
   networkName: string;
   tokenMeta?: Record<string, { name?: string | null; symbol?: string | null }>;
+  profitTokenDecimals?: number | null;
+  blockExplorer?: string | null;
 }) {
-  const base = explorerBase(opp.network_id);
+  const base = (blockExplorer || explorerBase(opp.network_id))?.replace(
+    /\/$/,
+    "",
+  );
+  const s = String(opp.status || "")
+    .toLowerCase()
+    .replace(/\s+/g, "_");
   const statusColor =
-    opp.status === "Succeeded" || opp.status === "PartiallySucceeded"
+    s === "executed" || s.includes("succeed")
       ? "bg-green-500/20 text-green-400 border-green-500/30"
-      : opp.status === "Skipped"
+      : s === "pending"
         ? "bg-yellow-500/20 text-yellow-400 border-yellow-500/30"
-        : opp.status === "Reverted" || opp.status === "Error"
-          ? "bg-red-500/20 text-red-400 border-red-500/30"
-          : "bg-gray-500/20 text-gray-400 border-gray-500/30";
+        : "bg-red-500/20 text-red-400 border-red-500/30";
 
   const profitColor = (v?: number | null) =>
     v != null && v >= 0 ? "text-green-400" : v != null ? "text-red-400" : "";
 
   const showProfitUsd =
-    opp.status === "Succeeded" || opp.status === "PartiallySucceeded";
+    opp.status?.toLowerCase().includes("executed") ||
+    opp.status?.toLowerCase().includes("succeeded");
 
   const badgeClasses = (kind: "token" | "pool") =>
     kind === "token"
@@ -164,28 +174,54 @@ export default function DebugDetails({
     return label ? `${label}` : shorten(addr);
   };
 
+  function formatUnits(raw?: string | null, decimals = 18): string {
+    if (!raw) return "0";
+    let s = raw.trim();
+    const neg = s.startsWith("-");
+    if (neg) s = s.slice(1);
+    s = s.replace(/^0+/, "");
+    if (s.length === 0) s = "0";
+    if (decimals <= 0) return (neg ? "-" : "") + s;
+    if (s.length <= decimals) s = "0".repeat(decimals - s.length + 1) + s;
+    const intPart = s.slice(0, s.length - decimals) || "0";
+    let frac = s.slice(s.length - decimals).replace(/0+$/, "");
+    return (neg ? "-" : "") + intPart + (frac ? "." + frac : "");
+  }
+
+  function formatTokenAmount(amount: string | null, decimals: number): string {
+    if (!amount) return "0";
+    const formatted = formatUnits(amount, decimals);
+    const dotIndex = formatted.indexOf(".");
+    if (dotIndex === -1) return formatted;
+    // Keep only 6 decimal places for display
+    return formatted.slice(0, Math.min(dotIndex + 7, formatted.length));
+  }
+
   return (
     <div className="flex flex-col gap-4">
       {/* Overview */}
       <Section title="Overview">
         {kv("ID", opp.id ?? "N/A")}
-        {kv("Network", `${networkName} (${opp.network_id})`)}
+        {kv(
+          "Network",
+          `${networkName ? networkName.charAt(0).toUpperCase() + networkName.slice(1) : ""} (${opp.network_id})`,
+        )}
         {kv(
           "Status",
           <span
             className={`inline-flex items-center rounded-sm border px-2 py-0.5 text-xs font-medium ${statusColor}`}
           >
-            {getStatusDisplayName(opp.status as any) || opp.status}
+            {opp.status}
           </span>,
         )}
         {showProfitUsd &&
           kv(
-            "Profit (USD)",
-            opp.profit_usd == null ? (
+            "Net Profit (USD)",
+            opp.profit_usd == null || opp.gas_usd == null ? (
               "N/A"
             ) : (
-              <span className={profitColor(opp.profit_usd)}>
-                {fmtUSD.format(opp.profit_usd)}
+              <span className={profitColor(opp.profit_usd - opp.gas_usd)}>
+                {fmtUSD.format(opp.profit_usd - opp.gas_usd)}
               </span>
             ),
           )}
@@ -193,7 +229,7 @@ export default function DebugDetails({
           "Profit Token",
           <span>
             {tokenLabel(opp.profit_token)} (
-            <LinkAddr addr={opp.profit_token} base={base} kind="address" />)
+            <LinkAddr addr={opp.profit_token} base={base} kind="token" />)
           </span>,
         )}
         {kv(
@@ -225,7 +261,7 @@ export default function DebugDetails({
               {dbg.path.map((p, i) => (
                 <React.Fragment key={i}>
                   <a
-                    href={`${base}/address/${p}`}
+                    href={`${base}/${i % 2 === 0 ? "token" : "address"}/${p}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className={badgeClasses(i % 2 === 0 ? "token" : "pool")}
@@ -250,7 +286,10 @@ export default function DebugDetails({
         )}
         {kv(
           "Error",
-          opp.status === "Error" || opp.status === "Reverted" || dbg?.error ? (
+          opp.status?.toLowerCase().includes("failed") ||
+            opp.status?.toLowerCase().includes("reverted") ||
+            opp.status?.toLowerCase().includes("error") ||
+            dbg?.error ? (
             <span className="text-red-400">{dbg?.error || opp.status}</span>
           ) : (
             "N/A"
@@ -293,18 +332,25 @@ export default function DebugDetails({
             "Simulation Time (ms)",
             dbg?.simulation_time == null ? "N/A" : dbg.simulation_time,
           )}
-          {kv("Volume", opp.amount)}
+          {kv(
+            "Volume",
+            opp.amount
+              ? `${formatTokenAmount(opp.amount, profitTokenDecimals ?? 18)} ${tokenLabel(opp.profit_token)}`
+              : "N/A",
+          )}
         </Section>
 
         <Section title="Execution">
           {kv(
-            "Revenue",
-            opp.profit || opp.profit_usd != null ? (
+            "Net Profit",
+            opp.profit || (opp.profit_usd != null && opp.gas_usd != null) ? (
               <span>
-                {opp.profit ? <span className="mr-1">{opp.profit}</span> : null}
-                {opp.profit_usd != null ? (
-                  <span className={profitColor(opp.profit_usd)}>
-                    ({fmtUSD.format(opp.profit_usd)})
+                {opp.profit ? (
+                  <span className="mr-1">{`${formatTokenAmount(opp.profit as string, profitTokenDecimals ?? 18)} ${tokenLabel(opp.profit_token)}`}</span>
+                ) : null}
+                {opp.profit_usd != null && opp.gas_usd != null ? (
+                  <span className={profitColor(opp.profit_usd - opp.gas_usd)}>
+                    ({fmtUSD.format(opp.profit_usd - opp.gas_usd)})
                   </span>
                 ) : null}
               </span>
@@ -323,10 +369,14 @@ export default function DebugDetails({
             opp.gas_token_amount || opp.gas_usd != null ? (
               <span>
                 {opp.gas_token_amount ? (
-                  <span className="mr-1">{opp.gas_token_amount}</span>
+                  <span className="mr-1">
+                    {formatUnits(opp.gas_token_amount as string, 18)}
+                  </span>
                 ) : null}
                 {opp.gas_usd != null ? (
-                  <span>({fmtUSD.format(opp.gas_usd)})</span>
+                  <span className="text-red-400">
+                    ({fmtUSD.format(opp.gas_usd)})
+                  </span>
                 ) : null}
               </span>
             ) : (
