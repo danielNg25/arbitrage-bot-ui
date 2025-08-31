@@ -99,7 +99,7 @@ function buildDummyOpps(nets: Network[], count = 50): OpportunityResponse[] {
       profit_usd: profit,
       gas_usd: gas,
       created_at: created.toISOString(),
-      source_block_timestamp: Math.floor(created.getTime() / 1000),
+
       source_tx: `0x${id}`,
       source_block_number: Math.floor(Math.random() * 1000000) + 1000000,
       profit_token: token,
@@ -115,7 +115,7 @@ export default function Tracking() {
   const [networksLoading, setNetworksLoading] = useState(true);
   const [status, setStatus] = useState<StatusFilter>("all");
   const [networkId, setNetworkId] = useState<number | "all">("all");
-  const [sortKey, setSortKey] = useState<SortKey>("source_block_timestamp");
+  const [sortKey, setSortKey] = useState<SortKey>("created_at");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [page, setPage] = useState(1); // Changed to 1-based indexing
   const [pageSize, setPageSize] = useState(100); // Changed to match API default
@@ -189,10 +189,10 @@ export default function Tracking() {
 
       // Add timestamp filters - Unix timestamps
       if (timestampFrom !== "") {
-        params.set("min_source_timestamp", timestampFrom);
+        params.set("min_created_at", timestampFrom);
       }
       if (timestampTo !== "") {
-        params.set("max_source_timestamp", timestampTo);
+        params.set("max_created_at", timestampTo);
       }
 
       const res = await fetch(
@@ -277,9 +277,7 @@ export default function Tracking() {
         profit_token_symbol: opp.profit_token_symbol, // Add profit token symbol
         profit_usd: opp.profit_usd,
         gas_usd: opp.gas_usd,
-        source_block_timestamp: Math.floor(
-          new Date(opp.source_block_timestamp).getTime() / 1000,
-        ),
+        created_at: Math.floor(new Date(opp.created_at).getTime() / 1000),
         source_block_number: opp.source_block_number, // Add source block number
       };
     });
@@ -375,7 +373,7 @@ export default function Tracking() {
               sortDir={sortDir}
               onSortChange={onSortChange}
               onRowClick={(r) => {
-                const rid = r.id || String(r.source_block_timestamp);
+                const rid = r.id || String(r.created_at);
                 navigate(`/opportunities/${rid}`);
               }}
             />

@@ -60,7 +60,6 @@ export interface OpportunityResponse {
   profit_usd: number | null;
   gas_usd: number | null;
   created_at: string; // ISO 8601 timestamp
-  source_block_timestamp: number; // Unix timestamp
   source_tx: string | null;
   source_block_number: number | null;
   profit_token: string;

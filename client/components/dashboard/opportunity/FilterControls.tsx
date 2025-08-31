@@ -149,9 +149,7 @@ export default function FilterControls({
         </div>
       </div>
       <div className="flex flex-col">
-        <label className="mb-1 text-xs text-muted-foreground">
-          Source Block Timestamp
-        </label>
+        <label className="mb-1 text-xs text-muted-foreground">Created At</label>
         <div className="flex items-center gap-2">
           <input
             type="datetime-local"
