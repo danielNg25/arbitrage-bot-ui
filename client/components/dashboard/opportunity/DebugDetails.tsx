@@ -9,6 +9,7 @@ export type OpportunityCombined = {
   created_at: number;
   updated_at: number;
   source_block_timestamp?: number | null;
+  execute_block_timestamp?: number | null; // New field for execute block time
   // Tx/blocks
   source_tx?: string | null;
   source_block_number?: number | null;
@@ -367,7 +368,10 @@ export default function DebugDetails({
             <LinkAddr addr={detail.execute_tx ?? null} base={base} kind="tx" />,
           )}
           {kv("Execute Tx Block", detail.execute_block_number ?? "N/A")}
-          {kv("Execute Tx Block Time", "N/A")}
+          {kv(
+            "Execute Tx Block Time",
+            iso(detail.execute_block_timestamp ?? null),
+          )}
           {kv(
             "Gas",
             detail.gas_token_amount || detail.gas_usd != null ? (

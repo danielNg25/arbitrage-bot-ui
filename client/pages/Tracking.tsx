@@ -115,7 +115,7 @@ function buildDummyOpps(nets: Network[], count = 50): OpportunityResponse[] {
 export default function Tracking() {
   const [networks, setNetworks] = useState<Network[]>([]);
   const [networksLoading, setNetworksLoading] = useState(true);
-  const [status, setStatus] = useState<StatusFilter>("all");
+  const [status, setStatus] = useState<StatusFilter>("Profitable");
   const [networkId, setNetworkId] = useState<number | "all">("all");
   const [sortKey, setSortKey] = useState<SortKey>("created_at");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
@@ -386,7 +386,7 @@ export default function Tracking() {
             setPage(1);
           }}
           onClear={() => {
-            setStatus("all");
+            setStatus("Profitable");
             setNetworkId("all");
             setProfitMin("");
             setProfitMax("");

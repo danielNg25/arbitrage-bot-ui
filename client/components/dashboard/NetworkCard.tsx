@@ -70,41 +70,16 @@ export function NetworkCard({
             {successCount}
           </p>
         </div>
+
         <div>
           <p className="text-[11px] uppercase tracking-wider text-muted-foreground">
-            Failed Tx
+            Success Rate
           </p>
-          <p className="mt-1 text-lg md:text-xl font-semibold leading-none font-mono tabular-nums text-rose-400">
-            {failedCount}
+          <p className="mt-1 text-lg md:text-xl font-semibold leading-none font-mono tabular-nums text-blue-400">
+            {(successRate * 100).toFixed(1)}%
           </p>
         </div>
-        {successRate > 0 && (
-          <div className="md:col-span-2">
-            <p className="text-[11px] uppercase tracking-wider text-muted-foreground">
-              Success Rate
-            </p>
-            <p className="mt-1 text-lg font-semibold leading-none font-mono tabular-nums text-blue-400">
-              {(successRate * 100).toFixed(1)}%
-            </p>
-          </div>
-        )}
       </div>
-
-      {network.block_explorer && (
-        <div className="px-6 pb-6">
-          <p className="text-[11px] uppercase tracking-wider text-muted-foreground">
-            Block Explorer
-          </p>
-          <a
-            href={network.block_explorer}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-1 text-xs font-mono text-primary hover:text-primary/80 break-all transition-colors"
-          >
-            {network.block_explorer}
-          </a>
-        </div>
-      )}
     </div>
   );
 }

@@ -5,6 +5,7 @@ import DebugDetails, {
 } from "@/components/dashboard/opportunity/DebugDetails";
 import type { OpportunityDetailsResponse } from "@shared/api";
 import { Button } from "@/components/ui/button";
+import { ethers } from "ethers";
 
 type ApiResponse = OpportunityDetailsResponse;
 
@@ -21,6 +22,20 @@ function formatStatus(status: string): string {
     .replace(/([A-Z])/g, " $1") // Add space before capital letters
     .replace(/^./, (str) => str.toUpperCase()) // Capitalize first letter
     .trim(); // Remove leading space
+}
+
+async function fetchBlockTimestamp(
+  rpcUrl: string,
+  blockNumber: number,
+): Promise<number | null> {
+  try {
+    const provider = new ethers.JsonRpcProvider(rpcUrl);
+    const block = await provider.getBlock(blockNumber);
+    return block ? block.timestamp * 1000 : null; // Convert to milliseconds
+  } catch (error) {
+    console.error(`Error fetching block ${blockNumber}:`, error);
+    return null;
+  }
 }
 
 function dummyCombined(): OpportunityCombined {
@@ -43,6 +58,7 @@ function dummyCombined(): OpportunityCombined {
     updated_at: now,
     source_block_number: 123456789,
     source_block_timestamp: now - 3600_000,
+    execute_block_timestamp: now - 3500_000,
     source_tx: "0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef",
     source_log_index: 42,
     execute_block_number: 123456799,
@@ -78,6 +94,7 @@ export default function DebugInsights() {
   const [profitTokenDecimals, setProfitTokenDecimals] = useState<number | null>(
     null,
   );
+  const [networkRpc, setNetworkRpc] = useState<string | null>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -159,6 +176,58 @@ export default function DebugInsights() {
 
         // Store block explorer for use in links
         setBlockExplorer(data.network?.block_explorer);
+
+        // Store network RPC for block fetching
+        setNetworkRpc(data.network?.rpc || null);
+
+        // Fetch block timestamps if RPC is available
+        if (data.network?.rpc) {
+          const fetchTimestamps = async () => {
+            const promises = [];
+
+            // Fetch source block timestamp
+            if (o.source_block_number) {
+              promises.push(
+                fetchBlockTimestamp(
+                  data.network.rpc,
+                  o.source_block_number,
+                ).then((timestamp) => ({ type: "source", timestamp })),
+              );
+            }
+
+            // Fetch execute block timestamp
+            if (o.execute_block_number) {
+              promises.push(
+                fetchBlockTimestamp(
+                  data.network.rpc,
+                  o.execute_block_number,
+                ).then((timestamp) => ({ type: "execute", timestamp })),
+              );
+            }
+
+            const results = await Promise.all(promises);
+
+            // Update detail with fetched timestamps
+            setDetail((prev) => {
+              if (!prev) return prev;
+              const updated = { ...prev };
+
+              results.forEach((result) => {
+                if (result.timestamp) {
+                  if (result.type === "source") {
+                    updated.source_block_timestamp = result.timestamp;
+                  } else if (result.type === "execute") {
+                    updated.execute_block_timestamp = result.timestamp;
+                  }
+                }
+              });
+
+              return updated;
+            });
+          };
+
+          fetchTimestamps().catch(console.error);
+        }
       } catch (e) {
         console.error("Error fetching opportunity details:", e);
         setError("Failed to fetch opportunity details");
