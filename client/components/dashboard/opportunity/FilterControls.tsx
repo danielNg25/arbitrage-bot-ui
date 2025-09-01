@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { OpportunityStatus, getStatusDisplayName } from "@shared/api";
 import {
@@ -8,6 +8,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { ChevronDown, ChevronUp, Calendar, MoreHorizontal } from "lucide-react";
 
 export type StatusFilter = "all" | OpportunityStatus | "Profitable";
 
@@ -17,6 +23,8 @@ export default function FilterControls({
   networks,
   profitMin,
   profitMax,
+  estimateProfitMin,
+  estimateProfitMax,
   timestampFrom,
   timestampTo,
   onChange,
@@ -27,6 +35,8 @@ export default function FilterControls({
   networks: { chain_id: number; name: string }[];
   profitMin: number | "";
   profitMax: number | "";
+  estimateProfitMin: number | "";
+  estimateProfitMax: number | "";
   timestampFrom: string;
   timestampTo: string;
   onChange: (v: {
@@ -34,6 +44,8 @@ export default function FilterControls({
     networkId?: number | "all";
     profitMin?: number | "";
     profitMax?: number | "";
+    estimateProfitMin?: number | "";
+    estimateProfitMax?: number | "";
     timestampFrom?: string;
     timestampTo?: string;
   }) => void;
@@ -159,59 +171,123 @@ export default function FilterControls({
         </div>
       </div>
       <div className="flex flex-col">
-        <label className="mb-1 text-xs text-muted-foreground">Created At</label>
+        <label className="mb-1 text-xs text-muted-foreground">
+          Estimated Profit (USD)
+        </label>
         <div className="flex items-center gap-2">
-          <div className="relative">
-            <input
-              id="datetime-from"
-              type="datetime-local"
-              className="h-10 w-41 rounded-l-md border-2 border-r-0 border-primary/50 bg-background px-3 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
-              value={convertUnixToDatetimeLocal(timestampFrom)}
-              onChange={(e) => {
-                const unixTimestamp = convertToUnixTimestamp(e.target.value);
-                onChange({ timestampFrom: unixTimestamp });
-              }}
-            />
-            <button
-              type="button"
-              className="absolute right-0 top-0 h-10 w-10 rounded-r-md border-2 border-l-0 border-primary/50 bg-primary/10 hover:bg-primary/20 flex items-center justify-center"
-              onClick={() => {
-                const input = document.getElementById(
-                  "datetime-from",
-                ) as HTMLInputElement;
-                if (input) input.showPicker();
-              }}
-            >
-              📅
-            </button>
-          </div>
+          <input
+            type="number"
+            inputMode="decimal"
+            placeholder="Min"
+            className="h-10 w-28 rounded-md border-2 border-border/60 bg-background px-3 text-sm"
+            value={estimateProfitMin}
+            onChange={(e) =>
+              onChange({
+                estimateProfitMin:
+                  e.target.value === "" ? "" : Number(e.target.value),
+              })
+            }
+          />
           <span className="text-xs text-muted-foreground">to</span>
-          <div className="relative">
-            <input
-              id="datetime-to"
-              type="datetime-local"
-              className="h-10 w-41 rounded-l-md border-2 border-r-0 border-primary/50 bg-background px-3 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
-              value={convertUnixToDatetimeLocal(timestampTo)}
-              onChange={(e) => {
-                const unixTimestamp = convertToUnixTimestamp(e.target.value);
-                onChange({ timestampTo: unixTimestamp });
-              }}
-            />
-            <button
-              type="button"
-              className="absolute right-0 top-0 h-10 w-10 rounded-r-md border-2 border-l-0 border-primary/50 bg-primary/10 hover:bg-primary/20 flex items-center justify-center"
-              onClick={() => {
-                const input = document.getElementById(
-                  "datetime-to",
-                ) as HTMLInputElement;
-                if (input) input.showPicker();
-              }}
-            >
-              📅
-            </button>
-          </div>
+          <input
+            type="number"
+            inputMode="decimal"
+            placeholder="Max"
+            className="h-10 w-28 rounded-md border-2 border-border/60 bg-background px-3 text-sm"
+            value={estimateProfitMax}
+            onChange={(e) =>
+              onChange({
+                estimateProfitMax:
+                  e.target.value === "" ? "" : Number(e.target.value),
+              })
+            }
+          />
         </div>
       </div>
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-10 px-3 flex items-center gap-2"
+          >
+            <Calendar size={16} />
+            Date Filters
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-96 p-6" align="end">
+          <div className="space-y-6">
+            <h4 className="font-medium text-sm">Date Range Filter</h4>
+
+            {/* Date Range Filter */}
+            <div className="space-y-3">
+              <label className="text-xs text-muted-foreground font-medium">
+                Select Date Range
+              </label>
+              <div className="space-y-3">
+                <div className="space-y-2">
+                  <label className="text-xs text-muted-foreground">From</label>
+                  <div className="relative">
+                    <input
+                      id="datetime-from-popup"
+                      type="datetime-local"
+                      className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                      value={convertUnixToDatetimeLocal(timestampFrom)}
+                      onChange={(e) => {
+                        const unixTimestamp = convertToUnixTimestamp(
+                          e.target.value,
+                        );
+                        onChange({ timestampFrom: unixTimestamp });
+                      }}
+                    />
+                    <button
+                      type="button"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 h-7 w-7 rounded border border-input bg-background hover:bg-accent flex items-center justify-center"
+                      onClick={() => {
+                        const input = document.getElementById(
+                          "datetime-from-popup",
+                        ) as HTMLInputElement;
+                        if (input) input.showPicker();
+                      }}
+                    >
+                      <Calendar size={14} />
+                    </button>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs text-muted-foreground">To</label>
+                  <div className="relative">
+                    <input
+                      id="datetime-to-popup"
+                      type="datetime-local"
+                      className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                      value={convertUnixToDatetimeLocal(timestampTo)}
+                      onChange={(e) => {
+                        const unixTimestamp = convertToUnixTimestamp(
+                          e.target.value,
+                        );
+                        onChange({ timestampTo: unixTimestamp });
+                      }}
+                    />
+                    <button
+                      type="button"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 h-7 w-7 rounded border border-input bg-background hover:bg-accent flex items-center justify-center"
+                      onClick={() => {
+                        const input = document.getElementById(
+                          "datetime-to-popup",
+                        ) as HTMLInputElement;
+                        if (input) input.showPicker();
+                      }}
+                    >
+                      <Calendar size={14} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </PopoverContent>
+      </Popover>
       <div className="flex gap-2">
         <Button type="button" variant="outline" onClick={onClear}>
           Clear Filters

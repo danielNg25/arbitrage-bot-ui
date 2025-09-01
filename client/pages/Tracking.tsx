@@ -129,6 +129,8 @@ export default function Tracking() {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [profitMin, setProfitMin] = useState<number | "">("");
   const [profitMax, setProfitMax] = useState<number | "">("");
+  const [estimateProfitMin, setEstimateProfitMin] = useState<number | "">("");
+  const [estimateProfitMax, setEstimateProfitMax] = useState<number | "">("");
   const [timestampFrom, setTimestampFrom] = useState<string>("");
   const [timestampTo, setTimestampTo] = useState<string>("");
 
@@ -189,6 +191,12 @@ export default function Tracking() {
       if (profitMin !== "") params.set("min_profit_usd", String(profitMin));
       if (profitMax !== "") params.set("max_profit_usd", String(profitMax));
 
+      // Add estimated profit filters
+      if (estimateProfitMin !== "")
+        params.set("min_estimate_profit_usd", String(estimateProfitMin));
+      if (estimateProfitMax !== "")
+        params.set("max_estimate_profit_usd", String(estimateProfitMax));
+
       // Add timestamp filters - Unix timestamps
       if (timestampFrom !== "") {
         params.set("min_created_at", timestampFrom);
@@ -239,6 +247,8 @@ export default function Tracking() {
     status,
     profitMin,
     profitMax,
+    estimateProfitMin,
+    estimateProfitMax,
     timestampFrom,
     timestampTo,
     networks,
@@ -371,6 +381,8 @@ export default function Tracking() {
           }))}
           profitMin={profitMin}
           profitMax={profitMax}
+          estimateProfitMin={estimateProfitMin}
+          estimateProfitMax={estimateProfitMax}
           timestampFrom={timestampFrom}
           timestampTo={timestampTo}
           onChange={(v) => {
@@ -378,6 +390,10 @@ export default function Tracking() {
             if (typeof v.networkId !== "undefined") setNetworkId(v.networkId);
             if (typeof v.profitMin !== "undefined") setProfitMin(v.profitMin);
             if (typeof v.profitMax !== "undefined") setProfitMax(v.profitMax);
+            if (typeof v.estimateProfitMin !== "undefined")
+              setEstimateProfitMin(v.estimateProfitMin);
+            if (typeof v.estimateProfitMax !== "undefined")
+              setEstimateProfitMax(v.estimateProfitMax);
             if (typeof v.timestampFrom !== "undefined")
               setTimestampFrom(v.timestampFrom);
             if (typeof v.timestampTo !== "undefined")
@@ -390,6 +406,8 @@ export default function Tracking() {
             setNetworkId("all");
             setProfitMin("");
             setProfitMax("");
+            setEstimateProfitMin("");
+            setEstimateProfitMax("");
             setTimestampFrom("");
             setTimestampTo("");
 

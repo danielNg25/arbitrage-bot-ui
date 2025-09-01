@@ -11,6 +11,8 @@ export const handleOpportunities: RequestHandler = async (req, res) => {
       status,
       min_profit_usd,
       max_profit_usd,
+      min_estimate_profit_usd,
+      max_estimate_profit_usd,
       min_created_at,
       max_created_at,
     } = req.query;
@@ -33,6 +35,12 @@ export const handleOpportunities: RequestHandler = async (req, res) => {
 
     if (min_profit_usd) params.set("min_profit_usd", String(min_profit_usd));
     if (max_profit_usd) params.set("max_profit_usd", String(max_profit_usd));
+
+    // Add estimated profit filters
+    if (min_estimate_profit_usd)
+      params.set("min_estimate_profit_usd", String(min_estimate_profit_usd));
+    if (max_estimate_profit_usd)
+      params.set("max_estimate_profit_usd", String(max_estimate_profit_usd));
 
     // Add timestamp filters
     if (min_created_at) params.set("min_created_at", String(min_created_at));

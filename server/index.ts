@@ -5,6 +5,7 @@ import { handleDemo } from "./routes/demo";
 import { handleNetworks } from "./routes/networks";
 import { handleOpportunities } from "./routes/opportunities";
 import { handleOpportunityDetails } from "./routes/opportunity-details";
+import { handleTokenPerformance } from "./routes/token-performance";
 import path from "path";
 
 export function createServer() {
@@ -23,6 +24,7 @@ export function createServer() {
   app.get("/api/v1/networks", handleNetworks);
   app.get("/api/v1/opportunities", handleOpportunities);
   app.get("/api/v1/opportunities/:id", handleOpportunityDetails);
+  app.get("/api/v1/tokens/performance", handleTokenPerformance);
 
   return app;
 }
