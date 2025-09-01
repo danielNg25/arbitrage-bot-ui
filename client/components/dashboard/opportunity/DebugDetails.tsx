@@ -342,15 +342,15 @@ export default function DebugDetails({
 
         <Section title="Execution">
           {kv(
-            "Net Profit",
+            "Revenue",
             opp.profit || (opp.profit_usd != null && opp.gas_usd != null) ? (
               <span>
                 {opp.profit ? (
                   <span className="mr-1">{`${formatTokenAmount(opp.profit as string, profitTokenDecimals ?? 18)} ${tokenLabel(opp.profit_token)}`}</span>
                 ) : null}
-                {opp.profit_usd != null && opp.gas_usd != null ? (
-                  <span className={profitColor(opp.profit_usd - opp.gas_usd)}>
-                    ({fmtUSD.format(opp.profit_usd - opp.gas_usd)})
+                {opp.profit_usd != null ? (
+                  <span className={profitColor(opp.profit_usd)}>
+                    ({fmtUSD.format(opp.profit_usd)})
                   </span>
                 ) : null}
               </span>
