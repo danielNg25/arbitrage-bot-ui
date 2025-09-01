@@ -60,6 +60,7 @@ export interface OpportunityResponse {
   status: string;
   profit_usd: number | null;
   gas_usd: number | null;
+  estimate_profit_usd: number | null; // Estimated profit before execution
   created_at: string; // ISO 8601 timestamp
   source_tx: string | null;
   source_block_number: number | null;
@@ -111,37 +112,62 @@ export interface NetworksResponse {
 
 // New types for opportunity details
 export interface OpportunityDetails {
+  // Base fields
+  id?: string;
   network_id: number;
   status: string;
   profit_usd: number | null;
-  profit_amount: string;
+  profit_amount?: string | null;
   gas_usd: number | null;
   created_at: string; // ISO 8601 timestamp
+  updated_at?: string | null; // ISO 8601 timestamp
+
+  // Source and execution
   source_tx: string;
   source_block_number: number;
+  source_log_index?: number | null;
+  source_pool?: string | null;
   execute_block_number: number;
+  execute_tx?: string | null;
+
+  // Token and amounts
   profit_token: string;
   profit_token_name: string;
   profit_token_symbol: string;
   profit_token_decimals: number;
+  amount?: string | null;
+  gas_token_amount?: string | null;
+
+  // Estimates and simulation
+  estimate_profit?: string | null; // raw token units
+  estimate_profit_usd?: number | null;
+  path?: string[];
+  received_at?: string | null;
+  send_at?: string | null;
+  simulation_time?: number | null;
+  error?: string | null;
+  gas_amount?: number | null;
+  gas_price?: number | null;
 }
 
 export interface NetworkDetails {
+  id?: string;
   chain_id: number;
   name: string;
   rpc: string;
-  block_explorer: string;
-  executed: number;
-  success: number;
-  failed: number;
+  block_explorer: string | null;
+  executed: number | null;
+  success: number | null;
+  failed: number | null;
   total_profit_usd: number;
   total_gas_usd: number;
-  last_proccesed_created_at: number; // Unix timestamp
+  last_proccesed_created_at: number | null; // Unix timestamp or null
   created_at: number; // Unix timestamp
-  success_rate: number;
+  success_rate: number | null;
 }
 
 export interface PathToken {
+  id?: string;
   address: string;
   name: string;
   symbol: string;
@@ -150,6 +176,7 @@ export interface PathToken {
 }
 
 export interface PathPool {
+  id?: string;
   address: string;
   pool_type: string;
   tokens: string[];

@@ -94,10 +94,12 @@ function buildDummyOpps(nets: Network[], count = 50): OpportunityResponse[] {
       Math.floor(Math.random() * 16).toString(16),
     ).join("");
     return {
+      id: id, // Add MongoDB ObjectId
       network_id: nid,
       status,
       profit_usd: profit,
       gas_usd: gas,
+      estimate_profit_usd: profit ? profit * (0.8 + Math.random() * 0.4) : null, // Estimated profit with some variance
       created_at: created.toISOString(),
 
       source_tx: `0x${id}`,
@@ -281,6 +283,7 @@ export default function Tracking() {
         profit_token_symbol: opp.profit_token_symbol, // Add profit token symbol
         profit_usd: opp.profit_usd,
         gas_usd: opp.gas_usd,
+        estimate_profit_usd: opp.estimate_profit_usd, // Add estimated profit
         created_at: Math.floor(new Date(opp.created_at).getTime() / 1000),
         source_block_number: opp.source_block_number, // Add source block number
       };

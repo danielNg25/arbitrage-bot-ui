@@ -11,6 +11,7 @@ export type OpportunityRow = {
   profit_token_symbol: string | null; // Add profit token symbol
   profit_usd: number | null;
   gas_usd: number | null;
+  estimate_profit_usd: number | null; // Estimated profit before execution
   created_at: number; // Unix timestamp for sorting
   source_block_number: number | null; // Add source block number
 };
@@ -119,12 +120,15 @@ export default function OpportunityTable({
   return (
     <div className="rounded-md border-2 border-border/60 bg-card shadow-md">
       <div className="overflow-x-auto">
-        <table className="min-w-[900px] w-full text-sm">
+        <table className="min-w-[1000px] w-full text-sm">
           <thead className="bg-muted/10 text-muted-foreground">
             <tr>
               <th className="px-4 py-3 text-left font-semibold">Network</th>
               <th className="px-4 py-3 text-left font-semibold">Status</th>
               <th className="px-4 py-3 text-left font-semibold">Token</th>
+              <th className="px-4 py-3 text-left font-semibold">
+                Estimated Revenue (USD)
+              </th>
               <th className="px-4 py-3 text-left">
                 <button
                   type="button"
@@ -188,6 +192,11 @@ export default function OpportunityTable({
                       </div>
                     )}
                   </div>
+                </td>
+                <td className="px-4 py-3 align-top font-mono tabular-nums">
+                  {r.estimate_profit_usd == null
+                    ? "N/A"
+                    : formatCurrencyWithPrecision(r.estimate_profit_usd)}
                 </td>
                 <td className="px-4 py-3 align-top font-mono tabular-nums">
                   {r.profit_usd == null || r.gas_usd == null

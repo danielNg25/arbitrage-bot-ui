@@ -1,37 +1,38 @@
 import React from "react";
 
-export type OpportunityDetail = {
+// Merged detail type used by the UI (combines old OpportunityDetail + OpportunityDebug)
+export type OpportunityCombined = {
   id?: string | null;
   network_id: number;
-  source_pool?: string | null;
   status: string;
+  // Timestamps (ms)
+  created_at: number;
+  updated_at: number;
+  source_block_timestamp?: number | null;
+  // Tx/blocks
+  source_tx?: string | null;
+  source_block_number?: number | null;
+  source_log_index?: number | null;
+  execute_tx?: string | null;
+  execute_block_number?: number | null;
+  // Pool/Path
+  source_pool?: string | null;
+  path?: string[] | null;
+  // Token & amounts
   profit_token: string;
   profit_usd?: number | null;
   gas_usd?: number | null;
-  created_at: number;
-  updated_at: number;
-  source_block_number?: number | null;
-  source_block_timestamp?: number | null;
-  source_tx?: string | null;
-  source_log_index?: number | null;
-  execute_block_number?: number | null;
-  execute_tx?: string | null;
-  amount: string;
-  profit?: string | null;
+  amount?: string | null;
+  profit?: string | null; // token profit amount (formatted)
   gas_token_amount?: string | null;
-};
-
-export type OpportunityDebug = {
-  id?: string | null;
+  // Estimates
   estimate_profit_usd?: number | null;
-  estimate_profit_token_amount?: string | null;
-  path?: string[] | null;
-  received_at?: number | null;
-  send_at?: number | null;
+  estimate_profit_token_amount?: string | null; // formatted with symbol
   simulation_time?: number | null;
-  error?: string | null;
+  // Gas & errors
   gas_amount?: number | null;
   gas_price?: number | null;
+  error?: string | null;
 };
 
 function shorten(addr?: string | null) {
@@ -127,25 +128,23 @@ function Section({
 }
 
 export default function DebugDetails({
-  opp,
-  dbg,
+  detail,
   networkName,
   tokenMeta = {},
   profitTokenDecimals = 18,
   blockExplorer,
 }: {
-  opp: OpportunityDetail;
-  dbg: OpportunityDebug | null;
+  detail: OpportunityCombined;
   networkName: string;
   tokenMeta?: Record<string, { name?: string | null; symbol?: string | null }>;
   profitTokenDecimals?: number | null;
   blockExplorer?: string | null;
 }) {
-  const base = (blockExplorer || explorerBase(opp.network_id))?.replace(
+  const base = (blockExplorer || explorerBase(detail.network_id))?.replace(
     /\/$/,
     "",
   );
-  const s = String(opp.status || "")
+  const s = String(detail.status || "")
     .toLowerCase()
     .replace(/\s+/g, "_");
   const statusColor =
@@ -159,8 +158,8 @@ export default function DebugDetails({
     v != null && v >= 0 ? "text-green-400" : v != null ? "text-red-400" : "";
 
   const showProfitUsd =
-    opp.status?.toLowerCase().includes("executed") ||
-    opp.status?.toLowerCase().includes("succeeded");
+    detail.status?.toLowerCase().includes("executed") ||
+    detail.status?.toLowerCase().includes("succeeded");
 
   const badgeClasses = (kind: "token" | "pool") =>
     kind === "token"
@@ -201,44 +200,44 @@ export default function DebugDetails({
     <div className="flex flex-col gap-4">
       {/* Overview */}
       <Section title="Overview">
-        {kv("ID", opp.id ?? "N/A")}
+        {kv("ID", detail.id ?? "N/A")}
         {kv(
           "Network",
-          `${networkName ? networkName.charAt(0).toUpperCase() + networkName.slice(1) : ""} (${opp.network_id})`,
+          `${networkName ? networkName.charAt(0).toUpperCase() + networkName.slice(1) : ""} (${detail.network_id})`,
         )}
         {kv(
           "Status",
           <span
             className={`inline-flex items-center rounded-sm border px-2 py-0.5 text-xs font-medium ${statusColor}`}
           >
-            {opp.status}
+            {detail.status}
           </span>,
         )}
         {showProfitUsd &&
           kv(
             "Net Profit (USD)",
-            opp.profit_usd == null || opp.gas_usd == null ? (
+            detail.profit_usd == null || detail.gas_usd == null ? (
               "N/A"
             ) : (
-              <span className={profitColor(opp.profit_usd - opp.gas_usd)}>
-                {fmtUSD.format(opp.profit_usd - opp.gas_usd)}
+              <span className={profitColor(detail.profit_usd - detail.gas_usd)}>
+                {fmtUSD.format(detail.profit_usd - detail.gas_usd)}
               </span>
             ),
           )}
         {kv(
           "Profit Token",
           <span>
-            {tokenLabel(opp.profit_token)} (
-            <LinkAddr addr={opp.profit_token} base={base} kind="token" />)
+            {tokenLabel(detail.profit_token)} (
+            <LinkAddr addr={detail.profit_token} base={base} kind="token" />)
           </span>,
         )}
         {kv(
           "Source Pool",
-          dbg?.path && dbg.path.length >= 3 ? (
+          detail.path && detail.path.length >= 3 ? (
             <span>
-              {tokenLabel(dbg.path[0])} - {tokenLabel(dbg.path[2])} (
+              {tokenLabel(detail.path[0])} - {tokenLabel(detail.path[2])} (
               <LinkAddr
-                addr={opp.source_pool ?? dbg.path[1] ?? null}
+                addr={detail.source_pool ?? detail.path[1] ?? null}
                 base={base}
                 kind="address"
               />
@@ -247,7 +246,7 @@ export default function DebugDetails({
           ) : (
             <span>
               <LinkAddr
-                addr={opp.source_pool ?? null}
+                addr={detail.source_pool ?? null}
                 base={base}
                 kind="address"
               />
@@ -256,9 +255,9 @@ export default function DebugDetails({
         )}
         {kv(
           "Path",
-          dbg?.path && dbg.path.length ? (
+          detail.path && detail.path.length ? (
             <div className="flex w-full flex-wrap items-center gap-2">
-              {dbg.path.map((p, i) => (
+              {detail.path.map((p, i) => (
                 <React.Fragment key={i}>
                   <a
                     href={`${base}/${i % 2 === 0 ? "token" : "address"}/${p}`}
@@ -268,7 +267,7 @@ export default function DebugDetails({
                   >
                     {i % 2 === 0 ? tokenLabel(p) : shorten(p)}
                   </a>
-                  {i < dbg.path!.length - 1 && (
+                  {i < detail.path!.length - 1 && (
                     <svg
                       className="h-4 w-4 text-muted-foreground"
                       viewBox="0 0 20 20"
@@ -286,11 +285,13 @@ export default function DebugDetails({
         )}
         {kv(
           "Error",
-          opp.status?.toLowerCase().includes("failed") ||
-            opp.status?.toLowerCase().includes("reverted") ||
-            opp.status?.toLowerCase().includes("error") ||
-            dbg?.error ? (
-            <span className="text-red-400">{dbg?.error || opp.status}</span>
+          detail.status?.toLowerCase().includes("failed") ||
+            detail.status?.toLowerCase().includes("reverted") ||
+            detail.status?.toLowerCase().includes("error") ||
+            detail.error ? (
+            <span className="text-red-400">
+              {detail.error || detail.status}
+            </span>
           ) : (
             "N/A"
           ),
@@ -302,18 +303,17 @@ export default function DebugDetails({
         <Section title="Simulation">
           {kv(
             "Estimated Revenue",
-            dbg &&
-              (dbg.estimate_profit_token_amount ||
-                dbg.estimate_profit_usd != null) ? (
+            detail.estimate_profit_token_amount ||
+              detail.estimate_profit_usd != null ? (
               <span>
-                {dbg.estimate_profit_token_amount ? (
+                {detail.estimate_profit_token_amount ? (
                   <span className="mr-1">
-                    {dbg.estimate_profit_token_amount}
+                    {detail.estimate_profit_token_amount}
                   </span>
                 ) : null}
-                {dbg.estimate_profit_usd != null ? (
-                  <span className={profitColor(dbg.estimate_profit_usd)}>
-                    ({fmtUSD.format(dbg.estimate_profit_usd)})
+                {detail.estimate_profit_usd != null ? (
+                  <span className={profitColor(detail.estimate_profit_usd)}>
+                    ({fmtUSD.format(detail.estimate_profit_usd)})
                   </span>
                 ) : null}
               </span>
@@ -323,19 +323,22 @@ export default function DebugDetails({
           )}
           {kv(
             "Source Tx",
-            <LinkAddr addr={opp.source_tx ?? null} base={base} kind="tx" />,
+            <LinkAddr addr={detail.source_tx ?? null} base={base} kind="tx" />,
           )}
-          {kv("Source Tx Block", opp.source_block_number ?? "N/A")}
-          {kv("Source Tx Block Time", iso(opp.source_block_timestamp ?? null))}
-          {kv("Source Log Index", opp.source_log_index ?? "N/A")}
+          {kv("Source Tx Block", detail.source_block_number ?? "N/A")}
+          {kv(
+            "Source Tx Block Time",
+            iso(detail.source_block_timestamp ?? null),
+          )}
+          {kv("Source Log Index", detail.source_log_index ?? "N/A")}
           {kv(
             "Simulation Time (ms)",
-            dbg?.simulation_time == null ? "N/A" : dbg.simulation_time,
+            detail.simulation_time == null ? "N/A" : detail.simulation_time,
           )}
           {kv(
             "Volume",
-            opp.amount
-              ? `${formatTokenAmount(opp.amount, profitTokenDecimals ?? 18)} ${tokenLabel(opp.profit_token)}`
+            detail.amount
+              ? `${formatTokenAmount(detail.amount, profitTokenDecimals ?? 18)} ${tokenLabel(detail.profit_token)}`
               : "N/A",
           )}
         </Section>
@@ -343,14 +346,15 @@ export default function DebugDetails({
         <Section title="Execution">
           {kv(
             "Revenue",
-            opp.profit || (opp.profit_usd != null && opp.gas_usd != null) ? (
+            detail.profit ||
+              (detail.profit_usd != null && detail.gas_usd != null) ? (
               <span>
-                {opp.profit ? (
-                  <span className="mr-1">{`${formatTokenAmount(opp.profit as string, profitTokenDecimals ?? 18)} ${tokenLabel(opp.profit_token)}`}</span>
+                {detail.profit ? (
+                  <span className="mr-1">{`${formatTokenAmount(detail.profit as string, profitTokenDecimals ?? 18)} ${tokenLabel(detail.profit_token)}`}</span>
                 ) : null}
-                {opp.profit_usd != null ? (
-                  <span className={profitColor(opp.profit_usd)}>
-                    ({fmtUSD.format(opp.profit_usd)})
+                {detail.profit_usd != null ? (
+                  <span className={profitColor(detail.profit_usd)}>
+                    ({fmtUSD.format(detail.profit_usd)})
                   </span>
                 ) : null}
               </span>
@@ -360,22 +364,22 @@ export default function DebugDetails({
           )}
           {kv(
             "Executed Tx",
-            <LinkAddr addr={opp.execute_tx ?? null} base={base} kind="tx" />,
+            <LinkAddr addr={detail.execute_tx ?? null} base={base} kind="tx" />,
           )}
-          {kv("Execute Tx Block", opp.execute_block_number ?? "N/A")}
+          {kv("Execute Tx Block", detail.execute_block_number ?? "N/A")}
           {kv("Execute Tx Block Time", "N/A")}
           {kv(
             "Gas",
-            opp.gas_token_amount || opp.gas_usd != null ? (
+            detail.gas_token_amount || detail.gas_usd != null ? (
               <span>
-                {opp.gas_token_amount ? (
+                {detail.gas_token_amount ? (
                   <span className="mr-1">
-                    {formatUnits(opp.gas_token_amount as string, 18)}
+                    {formatUnits(detail.gas_token_amount as string, 18)}
                   </span>
                 ) : null}
-                {opp.gas_usd != null ? (
+                {detail.gas_usd != null ? (
                   <span className="text-red-400">
-                    ({fmtUSD.format(opp.gas_usd)})
+                    ({fmtUSD.format(detail.gas_usd)})
                   </span>
                 ) : null}
               </span>
@@ -385,9 +389,12 @@ export default function DebugDetails({
           )}
           {kv(
             "Gas Price (wei)",
-            dbg?.gas_price == null ? "N/A" : dbg.gas_price,
+            detail.gas_price == null ? "N/A" : detail.gas_price,
           )}
-          {kv("Gas Usage", dbg?.gas_amount == null ? "N/A" : dbg.gas_amount)}
+          {kv(
+            "Gas Usage",
+            detail.gas_amount == null ? "N/A" : detail.gas_amount,
+          )}
         </Section>
       </div>
     </div>
