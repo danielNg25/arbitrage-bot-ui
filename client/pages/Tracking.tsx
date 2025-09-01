@@ -430,9 +430,25 @@ export default function Tracking() {
               sortKey={sortKey}
               sortDir={sortDir}
               onSortChange={onSortChange}
-              onRowClick={(r) => {
+              onRowClick={(r, openInNewTab) => {
                 const rid = r.id || String(r.created_at);
-                navigate(`/opportunities/${rid}`);
+                console.log("Row clicked:", { rid, openInNewTab });
+                if (openInNewTab) {
+                  // Open in new tab
+                  console.log("Opening in new tab:", `/opportunities/${rid}`);
+                  window.open(
+                    `/opportunities/${rid}`,
+                    "_blank",
+                    "noopener,noreferrer",
+                  );
+                } else {
+                  // Navigate in current tab
+                  console.log(
+                    "Navigating in current tab:",
+                    `/opportunities/${rid}`,
+                  );
+                  navigate(`/opportunities/${rid}`);
+                }
               }}
             />
           )}
