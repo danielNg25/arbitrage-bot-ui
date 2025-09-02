@@ -1,12 +1,6 @@
 import React, { useState } from "react";
-import { ArrowUpDown, ArrowDown, ArrowUp, ExternalLink } from "lucide-react";
+import { ArrowUpDown, ArrowDown, ArrowUp } from "lucide-react";
 import { getStatusDisplayName } from "@shared/api";
-import {
-  ContextMenu,
-  ContextMenuContent,
-  ContextMenuItem,
-  ContextMenuTrigger,
-} from "@/components/ui/context-menu";
 
 export type OpportunityRow = {
   id?: string;
@@ -112,7 +106,7 @@ export default function OpportunityTable({
   sortKey: SortKey;
   sortDir: SortDir;
   onSortChange: (key: SortKey) => void;
-  onRowClick?: (row: OpportunityRow, openInNewTab?: boolean) => void;
+  onRowClick?: (row: OpportunityRow) => void;
 }) {
   const SortIcon = ({ active, dir }: { active: boolean; dir: SortDir }) => {
     if (!active) return <ArrowUpDown className="h-4 w-4 opacity-50" />;
@@ -161,15 +155,24 @@ export default function OpportunityTable({
             </tr>
           </thead>
           <tbody>
-            {rows.map((r, idx) => (
-              <ContextMenu key={`${r.network_id}-${r.created_at}-${idx}`}>
-                <ContextMenuTrigger asChild>
-                  <tr
-                    className="border-t border-border/60 hover:bg-accent/10 cursor-pointer"
-                    onClick={() => onRowClick?.(r)}
-                    role={onRowClick ? "button" : undefined}
-                  >
-                    <td className="px-4 py-3 align-top">
+            {rows.map((r, idx) => {
+              const opportunityUrl = `/opportunities/${r.id || String(r.created_at)}`;
+              return (
+                <tr
+                  key={`${r.network_id}-${r.created_at}-${idx}`}
+                  className="border-t border-border/60 hover:bg-accent/10 cursor-pointer group"
+                  onClick={() => onRowClick?.(r)}
+                >
+                  <td className="px-4 py-3 align-top">
+                    <a
+                      href={opportunityUrl}
+                      className="block"
+                      aria-label={`View details for opportunity ${r.network_name} ${r.profit_token_symbol || r.profit_token}`}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        onRowClick?.(r);
+                      }}
+                    >
                       <div className="flex items-center gap-2">
                         <div className="w-2 h-2 rounded-full bg-primary/60"></div>
                         <div>
@@ -184,51 +187,42 @@ export default function OpportunityTable({
                           </div>
                         </div>
                       </div>
-                    </td>
-                    <td className="px-4 py-3 align-top">
-                      <StatusBadge status={r.status} />
-                    </td>
-                    <td className="px-4 py-3 align-top">
-                      <div>
-                        <div className="font-medium">
-                          {r.profit_token_symbol || "N/A"}
-                        </div>
-                        {!r.profit_token_symbol && (
-                          <div className="text-xs text-muted-foreground font-mono">
-                            {shorten(r.profit_token)}
-                          </div>
-                        )}
+                    </a>
+                  </td>
+                  <td className="px-4 py-3 align-top">
+                    <StatusBadge status={r.status} />
+                  </td>
+                  <td className="px-4 py-3 align-top">
+                    <div>
+                      <div className="font-medium">
+                        {r.profit_token_symbol || "N/A"}
                       </div>
-                    </td>
-                    <td className="px-4 py-3 align-top font-mono tabular-nums">
-                      {r.estimate_profit_usd == null
-                        ? "N/A"
-                        : formatCurrencyWithPrecision(r.estimate_profit_usd)}
-                    </td>
-                    <td className="px-4 py-3 align-top font-mono tabular-nums">
-                      {r.profit_usd == null || r.gas_usd == null
-                        ? "N/A"
-                        : formatCurrencyWithPrecision(r.profit_usd - r.gas_usd)}
-                    </td>
-                    <td className="px-4 py-3 align-top font-mono tabular-nums">
-                      {r.source_block_number || "N/A"}
-                    </td>
-                    <td className="px-4 py-3 align-top">
-                      {formatLocalTimestamp(r.created_at * 1000)}
-                    </td>
-                  </tr>
-                </ContextMenuTrigger>
-                <ContextMenuContent>
-                  <ContextMenuItem onClick={() => onRowClick?.(r)}>
-                    View Details
-                  </ContextMenuItem>
-                  <ContextMenuItem onClick={() => onRowClick?.(r, true)}>
-                    <ExternalLink className="mr-2 h-4 w-4" />
-                    Open in New Tab
-                  </ContextMenuItem>
-                </ContextMenuContent>
-              </ContextMenu>
-            ))}
+                      {!r.profit_token_symbol && (
+                        <div className="text-xs text-muted-foreground font-mono">
+                          {shorten(r.profit_token)}
+                        </div>
+                      )}
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 align-top font-mono tabular-nums">
+                    {r.estimate_profit_usd == null
+                      ? "N/A"
+                      : formatCurrencyWithPrecision(r.estimate_profit_usd)}
+                  </td>
+                  <td className="px-4 py-3 align-top font-mono tabular-nums">
+                    {r.profit_usd == null || r.gas_usd == null
+                      ? "N/A"
+                      : formatCurrencyWithPrecision(r.profit_usd - r.gas_usd)}
+                  </td>
+                  <td className="px-4 py-3 align-top font-mono tabular-nums">
+                    {r.source_block_number || "N/A"}
+                  </td>
+                  <td className="px-4 py-3 align-top">
+                    {formatLocalTimestamp(r.created_at * 1000)}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>

@@ -223,3 +223,51 @@ export interface OpportunityDebug {
   send_at: number;
   error: string | null;
 }
+
+/**
+ * Time Aggregation API interfaces
+ */
+export interface TokenAggregationResponse {
+  address: string;
+  name: string | null;
+  symbol: string | null;
+  total_profit_usd: number;
+  total_profit: string; // U256 string
+  opportunity_count: number;
+  avg_profit_usd: number;
+}
+
+export interface TimeAggregationResponse {
+  network_id: number;
+  network_name: string;
+  period: string; // "hourly", "daily", "monthly"
+  timestamp: number; // Unix timestamp for period start
+  period_start: string; // ISO 8601 formatted period start
+  period_end: string; // ISO 8601 formatted period end
+  total_opportunities: number;
+  executed_opportunities: number;
+  successful_opportunities: number;
+  failed_opportunities: number;
+  total_profit_usd: number;
+  total_gas_usd: number;
+  avg_profit_usd: number; // Calculated on-the-fly: total_profit_usd / total_opportunities
+  avg_gas_usd: number; // Calculated on-the-fly: total_gas_usd / total_opportunities
+  success_rate: number; // Calculated on-the-fly: successful_opportunities / executed_opportunities
+  top_profit_tokens: TokenAggregationResponse[];
+}
+
+/**
+ * Summary Aggregation API interfaces
+ */
+export interface SummaryAggregationResponse {
+  period: string; // "hourly", "daily", "monthly"
+  timestamp: number; // Unix timestamp for the period start
+  period_start: string; // ISO 8601 formatted period start
+  period_end: string; // ISO 8601 formatted period end
+  total_opportunities: number; // Total across all networks
+  executed_opportunities: number; // Total executed across all networks
+  successful_opportunities: number; // Total successful across all networks
+  failed_opportunities: number; // Total failed across all networks
+  total_profit_usd: number; // Total profit across all networks
+  total_gas_usd: number; // Total gas costs across all networks
+}
