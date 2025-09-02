@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { ProfitChart, SeriesPoint } from "@/components/dashboard/ProfitChart";
+import { ProfitChart } from "@/components/dashboard/ProfitChart";
 import { DailyNetworkCard } from "@/components/dashboard/DailyNetworkCard";
 import { useTimeAggregations } from "@/hooks/use-time-aggregations";
 import { Calendar } from "lucide-react";
@@ -22,27 +22,6 @@ type LoadState<T> = {
   loading: boolean;
   error: string | null;
 };
-
-function formatDateLabel(d: Date) {
-  return `${d.getMonth() + 1}/${d.getDate()}`;
-}
-
-function startOfDay(d: Date) {
-  const nd = new Date(d);
-  nd.setHours(0, 0, 0, 0);
-  return nd;
-}
-
-function lastNDays(n: number) {
-  const days: Date[] = [];
-  const today = startOfDay(new Date());
-  for (let i = n - 1; i >= 0; i--) {
-    const d = new Date(today);
-    d.setDate(today.getDate() - i);
-    days.push(d);
-  }
-  return days;
-}
 
 function buildDummyOpportunities(): Opportunity[] {
   const now = Date.now();
@@ -140,26 +119,6 @@ export default function Index() {
       if (o.status === "Reverted" || o.status === "Error")
         map.set(o.network_id, (map.get(o.network_id) || 0) + 1);
     return map;
-  }, [oppsState.data]);
-
-  const chartSeries: SeriesPoint[] = useMemo(() => {
-    const opps = (oppsState.data || []).filter(
-      (o) =>
-        (o.status === "Succeeded" || o.status === "PartiallySucceeded") &&
-        typeof o.profit_usd === "number",
-    );
-    const buckets = new Map<string, number>();
-    for (const d of lastNDays(30)) buckets.set(d.toISOString().slice(0, 10), 0);
-    for (const o of opps) {
-      const day = new Date(o.created_at);
-      const key = startOfDay(day).toISOString().slice(0, 10);
-      if (buckets.has(key))
-        buckets.set(key, (buckets.get(key) || 0) + (o.profit_usd || 0));
-    }
-    return Array.from(buckets.entries()).map(([day, val]) => ({
-      label: formatDateLabel(new Date(day)),
-      value: Number(val.toFixed(2)),
-    }));
   }, [oppsState.data]);
 
   const loading = aggregationsLoading || oppsState.loading;
@@ -374,9 +333,9 @@ export default function Index() {
 
       <section aria-label="Profit Over Time" className="space-y-3">
         <h3 className="text-base font-semibold tracking-tight">
-          Profit Over Time (30d)
+          Daily Profit Trend
         </h3>
-        <ProfitChart title="Total Profit (USD)" series={chartSeries} />
+        <ProfitChart title="Profit Trend" period="hourly" limit={24} />
       </section>
 
       {error && (

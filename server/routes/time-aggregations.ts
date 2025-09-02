@@ -5,15 +5,6 @@ export const handleTimeAggregations: RequestHandler = async (req, res) => {
     const { network_id, period, start_time, end_time, limit, offset } =
       req.query;
 
-    console.log("Time aggregations request:", {
-      network_id,
-      period,
-      start_time,
-      end_time,
-      limit,
-      offset,
-    });
-
     // Build query parameters
     const params = new URLSearchParams();
     if (network_id) params.set("network_id", String(network_id));
@@ -24,7 +15,6 @@ export const handleTimeAggregations: RequestHandler = async (req, res) => {
     if (offset) params.set("offset", String(offset));
 
     const apiUrl = `http://localhost:8081/api/v1/time-aggregations?${params.toString()}`;
-    console.log("External API call:", apiUrl);
 
     const response = await fetch(apiUrl);
 

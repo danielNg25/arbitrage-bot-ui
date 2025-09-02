@@ -9,9 +9,7 @@ export default function Layout() {
         <div className="container mx-auto flex items-center justify-between py-4">
           <div className="flex items-center gap-3">
             <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-cyan-400 to-blue-600" />
-            <h1 className="text-xl font-bold tracking-tight">
-              Arbitrage Bot Dashboard
-            </h1>
+            <h1 className="text-xl font-bold tracking-tight">Dashboard</h1>
             <nav className="ml-6 hidden gap-4 sm:flex">
               <NavLink
                 to="/"
