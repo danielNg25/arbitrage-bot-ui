@@ -68,6 +68,7 @@ export interface OpportunityResponse {
   profit_token_name: string | null;
   profit_token_symbol: string | null;
   profit_token_decimals: number | null;
+  _new?: boolean; // Flagged when inserted via WebSocket; used for highlight only
 }
 
 export interface PaginationInfo {

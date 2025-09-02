@@ -101,13 +101,26 @@ export default function OpportunityTable({
   sortDir,
   onSortChange,
   onRowClick,
+  highlight = {},
 }: {
   rows: OpportunityRow[];
   sortKey: SortKey;
   sortDir: SortDir;
   onSortChange: (key: SortKey) => void;
   onRowClick?: (row: OpportunityRow) => void;
+  highlight?: Record<string, boolean>;
 }) {
+  const getKey = (r: OpportunityRow) =>
+    r.id ?? `${r.network_id}-${r.created_at}`;
+
+  const highlightBgForStatus = (status: OpportunityRow["status"]) => {
+    if (status === "Succeeded") return "bg-emerald-500/15";
+    if (status === "PartiallySucceeded") return "bg-amber-500/15";
+    if (status === "Reverted" || status === "Error") return "bg-rose-500/15";
+    if (status === "Skipped") return "bg-slate-500/15";
+    return "bg-primary/10";
+  };
+
   const SortIcon = ({ active, dir }: { active: boolean; dir: SortDir }) => {
     if (!active) return <ArrowUpDown className="h-4 w-4 opacity-50" />;
     return dir === "asc" ? (
@@ -157,11 +170,14 @@ export default function OpportunityTable({
           <tbody>
             {rows.map((r, idx) => {
               const opportunityUrl = `/opportunities/${r.id || String(r.created_at)}`;
+              const k = getKey(r);
+              const hl = !!highlight[k];
               return (
                 <tr
                   key={`${r.network_id}-${r.created_at}-${idx}`}
-                  className="border-t border-border/60 hover:bg-accent/10 cursor-pointer group"
+                  className={`border-t border-border/60 cursor-pointer ${hl ? `${highlightBgForStatus(r.status)} animate-pulse` : "hover:bg-accent/10"}`}
                   onClick={() => onRowClick?.(r)}
+                  role={onRowClick ? "button" : undefined}
                 >
                   <td className="px-4 py-3 align-top">
                     <a

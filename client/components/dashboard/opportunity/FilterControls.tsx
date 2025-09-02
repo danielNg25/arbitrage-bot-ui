@@ -29,6 +29,7 @@ export default function FilterControls({
   timestampTo,
   onChange,
   onClear,
+  onApply,
 }: {
   status: StatusFilter;
   networkId: number | "all";
@@ -50,6 +51,7 @@ export default function FilterControls({
     timestampTo?: string;
   }) => void;
   onClear: () => void;
+  onApply: () => void;
 }) {
   const allStatuses: OpportunityStatus[] = [
     "Succeeded",
@@ -291,6 +293,9 @@ export default function FilterControls({
       <div className="flex gap-2">
         <Button type="button" variant="outline" onClick={onClear}>
           Clear Filters
+        </Button>
+        <Button type="button" onClick={onApply}>
+          Apply Filters
         </Button>
       </div>
     </div>
