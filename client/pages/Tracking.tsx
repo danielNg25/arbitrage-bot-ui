@@ -129,7 +129,7 @@ export default function Tracking() {
   const [sortKey, setSortKey] = useState<SortKey>("created_at");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [page, setPage] = useState(1); // Changed to 1-based indexing
-  const [pageSize, setPageSize] = useState(100); // Changed to match API default
+  const [pageSize, setPageSize] = useState(20); // Changed to match API default
   const [loading, setLoading] = useState(false);
   const [paginationLoading, setPaginationLoading] = useState(false); // Separate loading for pagination
   const [error, setError] = useState<string | null>(null);

@@ -115,7 +115,7 @@ export default function OpportunityTable({
 
   const highlightBgForStatus = (status: OpportunityRow["status"]) => {
     if (status === "Succeeded") return "bg-emerald-500/15";
-    if (status === "PartiallySucceeded") return "bg-amber-500/15";
+    if (status === "Partial") return "bg-amber-500/15";
     if (status === "Reverted" || status === "Error") return "bg-rose-500/15";
     if (status === "Skipped") return "bg-slate-500/15";
     return "bg-primary/10";
