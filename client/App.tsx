@@ -15,6 +15,7 @@ import Layout from "@/components/Layout";
 import Tracking from "@/pages/Tracking";
 import TokenPerformance from "@/pages/TokenPerformance";
 import DebugInsights from "@/pages/DebugInsights";
+import NetworkDetails from "@/pages/NetworkDetails";
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -29,6 +30,7 @@ const App = () => (
             <Route path="/opportunities" element={<Tracking />} />
             <Route path="/opportunities/:id" element={<DebugInsights />} />
             <Route path="/tokens" element={<TokenPerformance />} />
+            <Route path="/networks/:id" element={<NetworkDetails />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Route>

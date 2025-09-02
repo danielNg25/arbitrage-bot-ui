@@ -1,4 +1,6 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { TimeAggregationResponse } from "@shared/api";
 
@@ -39,6 +41,7 @@ export function DailyNetworkCard({
   aggregation: TimeAggregationResponse;
   className?: string;
 }) {
+  const navigate = useNavigate();
   const successCount = aggregation.successful_opportunities;
   const failedCount = aggregation.failed_opportunities;
   const executedCount = aggregation.executed_opportunities;
@@ -64,8 +67,18 @@ export function DailyNetworkCard({
             Period starts: {formatPeriodStart(aggregation.period_start)}
           </p>
         </div>
-        <div className="inline-flex items-center rounded-sm border border-primary/40 bg-primary/20 px-2.5 py-1 text-[11px] font-medium text-primary">
-          Executed: {executedCount}
+        <div className="flex flex-col items-end gap-2">
+          <div className="inline-flex items-center rounded-sm border border-primary/40 bg-primary/20 px-2.5 py-1 text-[11px] font-medium text-primary">
+            Executed: {executedCount}
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-7 px-2 text-xs"
+            onClick={() => navigate(`/networks/${aggregation.network_id}`)}
+          >
+            Details
+          </Button>
         </div>
       </div>
 
@@ -110,7 +123,7 @@ export function DailyNetworkCard({
           <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-2">
             Top Token
           </p>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col gap-2">
             <span className="text-sm font-medium">
               {aggregation.top_profit_tokens[0].symbol || "Unknown"}
             </span>

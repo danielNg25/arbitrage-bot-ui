@@ -58,8 +58,13 @@ export default function NetworkDetails() {
       setLoading(true);
       setError(null);
       try {
+        const params = new URLSearchParams();
+        params.set("period", period);
+        params.set("limit", String(limit));
+        params.set("network_id", String(id));
+
         const res = await fetch(
-          `/api/v1/networks/${id}/aggregations?period=${period}&limit=${limit}`,
+          `/api/v1/time-aggregations?${params.toString()}`,
         );
         if (!res.ok) throw new Error("api");
         const data = (await res.json()) as TimeAggregationResponse[];
@@ -104,7 +109,26 @@ export default function NetworkDetails() {
     }));
   }, [aggs, period]);
 
-  const latest = aggs[0];
+  const totals = useMemo(() => {
+    const initial = {
+      executed: 0,
+      successful: 0,
+      failed: 0,
+      totalProfitUsd: 0,
+      totalGasUsd: 0,
+    };
+    const summed = (aggs || []).reduce((acc, a) => {
+      acc.executed += a.executed_opportunities || 0;
+      acc.successful += a.successful_opportunities || 0;
+      acc.failed += a.failed_opportunities || 0;
+      acc.totalProfitUsd += a.total_profit_usd || 0;
+      acc.totalGasUsd += a.total_gas_usd || 0;
+      return acc;
+    }, initial);
+    const successRate =
+      summed.executed > 0 ? summed.successful / summed.executed : 0;
+    return { ...summed, successRate };
+  }, [aggs]);
 
   return (
     <section aria-label="Network Details" className="space-y-4">
@@ -166,9 +190,7 @@ export default function NetworkDetails() {
                 Executed / Success / Failed
               </p>
               <p className="mt-1 font-mono text-xl tabular-nums">
-                {latest
-                  ? `${latest.executed_opportunities} / ${latest.successful_opportunities} / ${latest.failed_opportunities}`
-                  : "-"}
+                {`${totals.executed} / ${totals.successful} / ${totals.failed}`}
               </p>
             </div>
             <div className="rounded-md border-2 border-border/60 bg-card p-4 shadow-md">
@@ -176,9 +198,7 @@ export default function NetworkDetails() {
                 Total Profit / Gas
               </p>
               <p className="mt-1 font-mono text-xl tabular-nums">
-                {latest
-                  ? `${currency.format(latest.total_profit_usd)} / ${currency.format(latest.total_gas_usd)}`
-                  : "-"}
+                {`${currency.format(totals.totalProfitUsd)} / ${currency.format(totals.totalGasUsd)}`}
               </p>
             </div>
             <div className="rounded-md border-2 border-border/60 bg-card p-4 shadow-md">
@@ -186,9 +206,7 @@ export default function NetworkDetails() {
                 Success Rate
               </p>
               <p className="mt-1 font-mono text-xl tabular-nums">
-                {latest
-                  ? `${Math.round((latest.success_rate || 0) * 100)}%`
-                  : "-"}
+                {`${Math.round((totals.successRate || 0) * 100)}%`}
               </p>
             </div>
           </div>
