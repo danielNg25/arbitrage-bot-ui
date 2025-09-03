@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import DebugDetails, {
   type OpportunityCombined,
@@ -95,6 +95,61 @@ export default function DebugInsights() {
     null,
   );
   const [networkRpc, setNetworkRpc] = useState<string | null>(null);
+  const [termOpen, setTermOpen] = useState(false);
+  const [termLines, setTermLines] = useState<string[]>([]);
+  const [simRunning, setSimRunning] = useState(false);
+  const [simError, setSimError] = useState<string | null>(null);
+  const termRef = useRef<HTMLDivElement | null>(null);
+
+  async function onSimulate() {
+    if (!detail) return;
+    setTermOpen(true);
+    setSimRunning(true);
+    setSimError(null);
+    setTermLines((l) => [...l, `$ simulate ${detail.id ?? "<no-id>"}`]);
+
+    try {
+      const res = await fetch("/api/simulate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ detail: detail }),
+      });
+
+      const text = await res.text();
+      let lines: string[] = [];
+
+      try {
+        const json = JSON.parse(text);
+        if (json && typeof json.trace === "string") {
+          lines = json.trace.split(/\r?\n/);
+          const meta: string[] = [];
+          if (json.gas_used) meta.push(`Gas used: ${json.gas_used}`);
+          if (json.block_number) meta.push(`Block: ${json.block_number}`);
+          if (json.success != null) meta.push(`Success: ${json.success}`);
+          if (json.error) meta.push(`Error: ${json.error}`);
+          if (meta.length) lines = [...lines, "", ...meta];
+        } else {
+          lines = text.split(/\r?\n/);
+        }
+      } catch {
+        lines = text.split(/\r?\n/);
+      }
+
+      setTermLines((prev) => [...prev, ...lines]);
+    } catch (e: any) {
+      setSimError("Simulation request failed");
+      setTermLines((prev) => [
+        ...prev,
+        `Error: ${e.message || "Simulation failed"}`,
+      ]);
+    } finally {
+      setSimRunning(false);
+      setTimeout(() => {
+        if (termRef.current)
+          termRef.current.scrollTop = termRef.current.scrollHeight;
+      }, 0);
+    }
+  }
 
   useEffect(() => {
     if (!id) return;
@@ -249,12 +304,8 @@ export default function DebugInsights() {
           <Button variant="outline" onClick={() => navigate("/opportunities")}>
             Back to Opportunities
           </Button>
-          <Button
-            onClick={() =>
-              console.log(`Simulate clicked for Opportunity ID: ${id}`)
-            }
-          >
-            Simulate
+          <Button onClick={onSimulate} disabled={simRunning || !detail}>
+            {simRunning ? "Running..." : "Simulate"}
           </Button>
         </div>
       </div>
@@ -266,13 +317,59 @@ export default function DebugInsights() {
           {error}
         </div>
       ) : detail ? (
-        <DebugDetails
-          detail={detail}
-          networkName={networkName}
-          tokenMeta={tokenMeta}
-          profitTokenDecimals={profitTokenDecimals ?? 18}
-          blockExplorer={blockExplorer}
-        />
+        <>
+          {(termLines.length > 0 || simRunning || simError) && (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-semibold tracking-tight">
+                  Simulation Output
+                </h3>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => setTermLines([])}
+                    disabled={!termLines.length}
+                  >
+                    Clear
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => setTermOpen((v) => !v)}
+                  >
+                    {termOpen ? "Hide" : "Show"}
+                  </Button>
+                </div>
+              </div>
+              {simError ? (
+                <div className="rounded-md border border-destructive bg-destructive/10 px-4 py-3 text-xs text-destructive-foreground">
+                  {simError}
+                </div>
+              ) : null}
+              {termOpen && (
+                <div
+                  ref={termRef}
+                  className="rounded-md border-2 border-border/60 bg-black/80 text-green-400 font-mono text-xs p-3 h-96 overflow-auto whitespace-pre-wrap"
+                >
+                  {termLines.length === 0 ? (
+                    <div className="text-muted-foreground">
+                      No output yet. Click Simulate to run.
+                    </div>
+                  ) : (
+                    termLines.map((ln, i) => <div key={i}>{ln}</div>)
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          <DebugDetails
+            detail={detail}
+            networkName={networkName}
+            tokenMeta={tokenMeta}
+            profitTokenDecimals={profitTokenDecimals ?? 18}
+            blockExplorer={blockExplorer}
+          />
+        </>
       ) : (
         <div className="text-sm text-muted-foreground">No data</div>
       )}
