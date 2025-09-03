@@ -101,6 +101,44 @@ export default function DebugInsights() {
   const [simError, setSimError] = useState<string | null>(null);
   const termRef = useRef<HTMLDivElement | null>(null);
 
+  // Helper function to fetch transaction details from blockchain
+  async function fetchTransactionDetails(
+    txHash: string,
+  ): Promise<{ from: string; to: string | null }> {
+    if (!networkRpc) {
+      // Fallback if no RPC available
+      return {
+        from:
+          import.meta.env.VITE_DEFAULT_SENDER_ADDRESS ||
+          "0x0000000000000000000000000000000000000000",
+        to: null,
+      };
+    }
+
+    try {
+      const provider = new ethers.JsonRpcProvider(networkRpc);
+      const tx = await provider.getTransaction(txHash);
+
+      if (!tx) {
+        throw new Error("Transaction not found");
+      }
+
+      return {
+        from: tx.from,
+        to: tx.to,
+      };
+    } catch (error) {
+      console.error("Error fetching transaction details:", error);
+      // Fallback on error
+      return {
+        from:
+          import.meta.env.VITE_DEFAULT_SENDER_ADDRESS ||
+          "0x0000000000000000000000000000000000000000",
+        to: null,
+      };
+    }
+  }
+
   async function onSimulate() {
     if (!detail) return;
     setTermOpen(true);
@@ -109,10 +147,30 @@ export default function DebugInsights() {
     setTermLines((l) => [...l, `$ simulate ${detail.id ?? "<no-id>"}`]);
 
     try {
-      const res = await fetch("/api/simulate", {
+      // Fetch transaction details if execute_tx exists
+      let fromAddress =
+        import.meta.env.VITE_DEFAULT_SENDER_ADDRESS ||
+        "0x0000000000000000000000000000000000000000";
+      let toAddress: string | null = null;
+
+      if (detail.execute_tx) {
+        const txDetails = await fetchTransactionDetails(detail.execute_tx);
+        fromAddress = txDetails.from;
+        toAddress = txDetails.to;
+      }
+
+      // Build request body according to the real API spec
+      const requestBody = {
+        opportunity: detail,
+        block_number: detail.source_block_number?.toString() || "latest",
+        from_address: fromAddress,
+        to: toAddress,
+      };
+
+      const res = await fetch("/api/v1/debug/opportunity", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ detail: detail }),
+        body: JSON.stringify(requestBody),
       });
 
       const text = await res.text();
@@ -123,9 +181,8 @@ export default function DebugInsights() {
         if (json && typeof json.trace === "string") {
           lines = json.trace.split(/\r?\n/);
           const meta: string[] = [];
-          if (json.gas_used) meta.push(`Gas used: ${json.gas_used}`);
+          // if (json.gas_used) meta.push(`Gas used: ${json.gas_used}`);
           if (json.block_number) meta.push(`Block: ${json.block_number}`);
-          if (json.success != null) meta.push(`Success: ${json.success}`);
           if (json.error) meta.push(`Error: ${json.error}`);
           if (meta.length) lines = [...lines, "", ...meta];
         } else {
@@ -219,6 +276,7 @@ export default function DebugInsights() {
               ? o.estimate_profit_usd
               : null,
           estimate_profit_token_amount: estTokenAmt,
+          estimate_profit: estRaw,
           simulation_time:
             typeof o.simulation_time === "number" ? o.simulation_time : null,
           gas_amount: typeof o.gas_amount === "number" ? o.gas_amount : null,
@@ -348,9 +406,14 @@ export default function DebugInsights() {
               {termOpen && (
                 <div
                   ref={termRef}
-                  className="rounded-md border-2 border-border/60 bg-black/80 text-green-400 font-mono text-xs p-3 h-96 overflow-auto whitespace-pre-wrap"
+                  className="rounded-md border-2 border-border/60 bg-muted text-foreground font-mono text-xs p-3 h-96 overflow-auto whitespace-pre-wrap"
                 >
-                  {termLines.length === 0 ? (
+                  {simRunning ? (
+                    <div className="flex items-center gap-2">
+                      <div className="animate-spin w-4 h-4 border-2 border-green-400 border-t-transparent rounded-full"></div>
+                      <span>Running simulation...</span>
+                    </div>
+                  ) : termLines.length === 0 ? (
                     <div className="text-muted-foreground">
                       No output yet. Click Simulate to run.
                     </div>

@@ -29,6 +29,7 @@ export type OpportunityCombined = {
   // Estimates
   estimate_profit_usd?: number | null;
   estimate_profit_token_amount?: string | null; // formatted with symbol
+  estimate_profit?: string | null; // raw token units
   simulation_time?: number | null;
   // Gas & errors
   gas_amount?: number | null;
