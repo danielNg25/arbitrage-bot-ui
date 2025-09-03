@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import DebugDetails, {
   type OpportunityCombined,
@@ -17,11 +17,10 @@ function toMillis(s?: string | number | null) {
 }
 
 function formatStatus(status: string): string {
-  // Convert status to prettier format with proper spacing
   return status
-    .replace(/([A-Z])/g, " $1") // Add space before capital letters
-    .replace(/^./, (str) => str.toUpperCase()) // Capitalize first letter
-    .trim(); // Remove leading space
+    .replace(/([A-Z])/g, " $1")
+    .replace(/^./, (str) => str.toUpperCase())
+    .trim();
 }
 
 async function fetchBlockTimestamp(
@@ -31,7 +30,7 @@ async function fetchBlockTimestamp(
   try {
     const provider = new ethers.JsonRpcProvider(rpcUrl);
     const block = await provider.getBlock(blockNumber);
-    return block ? block.timestamp * 1000 : null; // Convert to milliseconds
+    return block ? block.timestamp * 1000 : null;
   } catch (error) {
     console.error(`Error fetching block ${blockNumber}:`, error);
     return null;
@@ -101,12 +100,263 @@ export default function DebugInsights() {
   const [simError, setSimError] = useState<string | null>(null);
   const termRef = useRef<HTMLDivElement | null>(null);
 
-  // Helper function to fetch transaction details from blockchain
+  function renderColoredTrace(traceText: string): string {
+    const lines = traceText.split("\n");
+    const coloredLines: string[] = [];
+
+    // Track call outcomes for coloring
+    const callOutcomes = new Map<string, "success" | "failed">();
+
+    // First pass: identify call outcomes
+    lines.forEach((line) => {
+      const trimmed = line.trim();
+      if (trimmed.includes("← [Return]")) {
+        // Find the most recent call line above this return
+        for (let i = coloredLines.length - 1; i >= 0; i--) {
+          const prevLine = coloredLines[i];
+          if (prevLine.includes("::") && prevLine.includes("[")) {
+            callOutcomes.set(prevLine, "success");
+            break;
+          }
+        }
+      } else if (
+        trimmed.includes("← [Revert]") ||
+        trimmed.includes("custom error")
+      ) {
+        // Find the most recent call line above this revert
+        for (let i = coloredLines.length - 1; i >= 0; i--) {
+          const prevLine = coloredLines[i];
+          if (prevLine.includes("::") && prevLine.includes("[")) {
+            callOutcomes.set(prevLine, "failed");
+            break;
+          }
+        }
+      }
+    });
+
+    // Second pass: color the lines
+    lines.forEach((line) => {
+      const trimmed = line.trim();
+
+      if (trimmed.includes("::") && trimmed.includes("[")) {
+        // This is a call line
+        const outcome = callOutcomes.get(line);
+        let colorClass = "text-gray-300"; // unknown - lighter gray
+        let fontWeight = "font-normal";
+
+        if (outcome === "success") {
+          colorClass = "text-green-400";
+          fontWeight = "font-bold";
+        } else if (outcome === "failed") {
+          colorClass = "text-red-400";
+          fontWeight = "font-bold";
+        }
+
+        // Preserve the exact original line with colors applied to the content
+        const callMatch = trimmed.match(
+          /^(\s*)(\[(\d+)\]\s*(0x[a-fA-F0-9]+)::([a-zA-Z0-9_]+)\((.*)\))(.*)$/,
+        );
+        if (callMatch) {
+          const [, indent, callContent, gas, address, func, args, rest] =
+            callMatch;
+          // Color all gas numbers in brackets with a subtle color, rest of call content with status color
+          const coloredCall = callContent.replace(
+            /\[(\d+)\]/g,
+            '<span class="text-gray-400">[$1]</span>',
+          );
+          const finalCall = `<span class="${colorClass} ${fontWeight}">${coloredCall}</span>${rest}`;
+          // Color tree symbols in gray, keep content colored
+          const grayIndent = indent.replace(
+            /[├└│]/g,
+            '<span class="text-gray-500">$&</span>',
+          );
+          coloredLines.push(`${grayIndent}${finalCall}`);
+        } else {
+          // Fallback: color tree symbols gray, gas numbers subtle, content with call color
+          const grayLine = line.replace(
+            /[├└│]/g,
+            '<span class="text-gray-500">$&</span>',
+          );
+          const contentStart = line.search(/[^├└│\s]/);
+          if (contentStart !== -1) {
+            const beforeContent = line.substring(0, contentStart);
+            const content = line.substring(contentStart);
+            const grayBefore = beforeContent.replace(
+              /[├└│]/g,
+              '<span class="text-gray-500">$&</span>',
+            );
+            // Color gas numbers in the content
+            const coloredContent = content.replace(
+              /\[(\d+)\]/g,
+              '<span class="text-gray-400">[$1]</span>',
+            );
+            coloredLines.push(
+              `${grayBefore}<span class="${colorClass} ${fontWeight}">${coloredContent}</span>`,
+            );
+          } else {
+            coloredLines.push(grayLine);
+          }
+        }
+      } else if (trimmed.includes("← [Return]")) {
+        // Success outcome - color tree symbols gray, content with optimistic color
+        const grayLine = line.replace(
+          /[├└│]/g,
+          '<span class="text-gray-500">$&</span>',
+        );
+        const contentStart = line.search(/[^├└│\s]/);
+        if (contentStart !== -1) {
+          const beforeContent = line.substring(0, contentStart);
+          const content = line.substring(contentStart);
+          const grayBefore = beforeContent.replace(
+            /[├└│]/g,
+            '<span class="text-gray-500">$&</span>',
+          );
+          coloredLines.push(
+            `${grayBefore}<span class="text-emerald-400">${content}</span>`,
+          );
+        } else {
+          coloredLines.push(grayLine);
+        }
+      } else if (trimmed.includes("← [Stop]")) {
+        // Stop outcome - color tree symbols gray, content with optimistic color
+        const grayLine = line.replace(
+          /[├└│]/g,
+          '<span class="text-gray-500">$&</span>',
+        );
+        const contentStart = line.search(/[^├└│\s]/);
+        if (contentStart !== -1) {
+          const beforeContent = line.substring(0, contentStart);
+          const content = line.substring(contentStart);
+          const grayBefore = beforeContent.replace(
+            /[├└│]/g,
+            '<span class="text-gray-500">$&</span>',
+          );
+          coloredLines.push(
+            `${grayBefore}<span class="text-emerald-400">${content}</span>`,
+          );
+        } else {
+          coloredLines.push(grayLine);
+        }
+      } else if (
+        trimmed.includes("← [Revert]") ||
+        trimmed.includes("custom error")
+      ) {
+        // Failed outcome - color tree symbols gray, content red
+        const grayLine = line.replace(
+          /[├└│]/g,
+          '<span class="text-gray-500">$&</span>',
+        );
+        const contentStart = line.search(/[^├└│\s]/);
+        if (contentStart !== -1) {
+          const beforeContent = line.substring(0, contentStart);
+          const content = line.substring(contentStart);
+          const grayBefore = beforeContent.replace(
+            /[├└│]/g,
+            '<span class="text-gray-500">$&</span>',
+          );
+          coloredLines.push(
+            `${grayBefore}<span class="text-red-300">${content}</span>`,
+          );
+        } else {
+          coloredLines.push(grayLine);
+        }
+      } else if (trimmed.includes("emit ")) {
+        // Event emission - color tree symbols gray, content blue
+        const grayLine = line.replace(
+          /[├└│]/g,
+          '<span class="text-gray-500">$&</span>',
+        );
+        const contentStart = line.search(/[^├└│\s]/);
+        if (contentStart !== -1) {
+          const beforeContent = line.substring(0, contentStart);
+          const content = line.substring(contentStart);
+          const grayBefore = beforeContent.replace(
+            /[├└│]/g,
+            '<span class="text-gray-500">$&</span>',
+          );
+          coloredLines.push(
+            `${grayBefore}<span class="text-blue-400">${content}</span>`,
+          );
+        } else {
+          coloredLines.push(grayLine);
+        }
+      } else if (trimmed.includes("Gas used:") || trimmed.includes("Block:")) {
+        // Metadata - color tree symbols gray, content cyan
+        const grayLine = line.replace(
+          /[├└│]/g,
+          '<span class="text-gray-500">$&</span>',
+        );
+        const contentStart = line.search(/[^├└│\s]/);
+        if (contentStart !== -1) {
+          const beforeContent = line.substring(0, contentStart);
+          const content = line.substring(contentStart);
+          const grayBefore = beforeContent.replace(
+            /[├└│]/g,
+            '<span class="text-gray-500">$&</span>',
+          );
+          coloredLines.push(
+            `${grayBefore}<span class="text-cyan-400 font-semibold">${content}</span>`,
+          );
+        } else {
+          coloredLines.push(grayLine);
+        }
+      } else if (trimmed.includes("Error:")) {
+        // Error messages - color tree symbols gray, content red
+        const grayLine = line.replace(
+          /[├└│]/g,
+          '<span class="text-gray-500">$&</span>',
+        );
+        const contentStart = line.search(/[^├└│\s]/);
+        if (contentStart !== -1) {
+          const beforeContent = line.substring(0, contentStart);
+          const content = line.substring(contentStart);
+          const grayBefore = beforeContent.replace(
+            /[├└│]/g,
+            '<span class="text-gray-500">$&</span>',
+          );
+          coloredLines.push(
+            `${grayBefore}<span class="text-red-400 font-bold">${content}</span>`,
+          );
+        } else {
+          coloredLines.push(grayLine);
+        }
+      } else if (trimmed.includes("Transaction successfully executed.")) {
+        // Success messages - color tree symbols gray, content with optimistic color
+        const grayLine = line.replace(
+          /[├└│]/g,
+          '<span class="text-gray-500">$&</span>',
+        );
+        const contentStart = line.search(/[^├└│\s]/);
+        if (contentStart !== -1) {
+          const beforeContent = line.substring(0, contentStart);
+          const content = line.substring(contentStart);
+          const grayBefore = beforeContent.replace(
+            /[├└│]/g,
+            '<span class="text-gray-500">$&</span>',
+          );
+          coloredLines.push(
+            `${grayBefore}<span class="text-emerald-400 font-bold">${content}</span>`,
+          );
+        } else {
+          coloredLines.push(grayLine);
+        }
+      } else {
+        // Other lines - color tree symbols gray, preserve rest
+        const grayLine = line.replace(
+          /[├└│]/g,
+          '<span class="text-gray-500">$&</span>',
+        );
+        coloredLines.push(grayLine);
+      }
+    });
+
+    return coloredLines.join("\n");
+  }
+
   async function fetchTransactionDetails(
     txHash: string,
   ): Promise<{ from: string; to: string | null }> {
     if (!networkRpc) {
-      // Fallback if no RPC available
       return {
         from:
           import.meta.env.VITE_DEFAULT_SENDER_ADDRESS ||
@@ -129,7 +379,6 @@ export default function DebugInsights() {
       };
     } catch (error) {
       console.error("Error fetching transaction details:", error);
-      // Fallback on error
       return {
         from:
           import.meta.env.VITE_DEFAULT_SENDER_ADDRESS ||
@@ -147,7 +396,6 @@ export default function DebugInsights() {
     setTermLines((l) => [...l, `$ simulate ${detail.id ?? "<no-id>"}`]);
 
     try {
-      // Fetch transaction details if execute_tx exists
       let fromAddress =
         import.meta.env.VITE_DEFAULT_SENDER_ADDRESS ||
         "0x0000000000000000000000000000000000000000";
@@ -159,7 +407,6 @@ export default function DebugInsights() {
         toAddress = txDetails.to;
       }
 
-      // Build request body according to the real API spec
       const requestBody = {
         opportunity: detail,
         block_number: detail.source_block_number?.toString() || "latest",
@@ -179,20 +426,36 @@ export default function DebugInsights() {
       try {
         const json = JSON.parse(text);
         if (json && typeof json.trace === "string") {
-          lines = json.trace.split(/\r?\n/);
+          const coloredTrace = renderColoredTrace(json.trace);
           const meta: string[] = [];
-          // if (json.gas_used) meta.push(`Gas used: ${json.gas_used}`);
+          if (json.gas_used) meta.push(`Gas used: ${json.gas_used}`);
           if (json.block_number) meta.push(`Block: ${json.block_number}`);
           if (json.error) meta.push(`Error: ${json.error}`);
-          if (meta.length) lines = [...lines, "", ...meta];
+          if (json.success !== undefined) meta.push(`Success: ${json.success}`);
+
+          const coloredMeta = meta
+            .map((line) => {
+              if (line.includes("Gas used:"))
+                return `<span class="text-cyan-400 font-semibold">${line}</span>`;
+              if (line.includes("Block:"))
+                return `<span class="text-cyan-400 font-semibold">${line}</span>`;
+              if (line.includes("Error:"))
+                return `<span class="text-red-400 font-bold">${line}</span>`;
+              if (line.includes("Success:"))
+                return `<span class="text-green-400 font-bold">${line}</span>`;
+              return `<span class="text-gray-400">${line}</span>`;
+            })
+            .join("");
+
+          setTermLines((prev) => [...prev, coloredTrace, coloredMeta]);
         } else {
           lines = text.split(/\r?\n/);
+          setTermLines((prev) => [...prev, ...lines]);
         }
       } catch {
         lines = text.split(/\r?\n/);
+        setTermLines((prev) => [...prev, ...lines]);
       }
-
-      setTermLines((prev) => [...prev, ...lines]);
     } catch (e: any) {
       setSimError("Simulation request failed");
       setTermLines((prev) => [
@@ -286,19 +549,13 @@ export default function DebugInsights() {
 
         setDetail(detailMapped);
         setNetworkName(data.network?.name || String(o.network_id));
-
-        // Store block explorer for use in links
         setBlockExplorer(data.network?.block_explorer);
-
-        // Store network RPC for block fetching
         setNetworkRpc(data.network?.rpc || null);
 
-        // Fetch block timestamps if RPC is available
         if (data.network?.rpc) {
           const fetchTimestamps = async () => {
             const promises = [];
 
-            // Fetch source block timestamp
             if (o.source_block_number) {
               promises.push(
                 fetchBlockTimestamp(
@@ -308,7 +565,6 @@ export default function DebugInsights() {
               );
             }
 
-            // Fetch execute block timestamp
             if (o.execute_block_number) {
               promises.push(
                 fetchBlockTimestamp(
@@ -320,7 +576,6 @@ export default function DebugInsights() {
 
             const results = await Promise.all(promises);
 
-            // Update detail with fetched timestamps
             setDetail((prev) => {
               if (!prev) return prev;
               const updated = { ...prev };
@@ -406,7 +661,7 @@ export default function DebugInsights() {
               {termOpen && (
                 <div
                   ref={termRef}
-                  className="rounded-md border-2 border-border/60 bg-muted text-foreground font-mono text-xs p-3 h-96 overflow-auto whitespace-pre-wrap"
+                  className="rounded-md border-2 border-border/60 bg-muted text-foreground font-mono text-xs p-3 h-96 overflow-auto whitespace-pre-wrap break-words break-all"
                 >
                   {simRunning ? (
                     <div className="flex items-center gap-2">
@@ -418,7 +673,11 @@ export default function DebugInsights() {
                       No output yet. Click Simulate to run.
                     </div>
                   ) : (
-                    termLines.map((ln, i) => <div key={i}>{ln}</div>)
+                    <div
+                      dangerouslySetInnerHTML={{
+                        __html: termLines.join(""),
+                      }}
+                    />
                   )}
                 </div>
               )}
