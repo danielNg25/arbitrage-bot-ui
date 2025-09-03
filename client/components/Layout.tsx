@@ -1,8 +1,11 @@
-import React from "react";
+import React, { useState } from "react";
 import { NavLink, Outlet } from "react-router-dom";
 import ThemeToggle from "@/components/ThemeToggle";
+import { Menu, X } from "lucide-react";
 
 export default function Layout() {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/40">
       <header className="sticky top-0 z-10 border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -39,10 +42,97 @@ export default function Layout() {
             </nav>
           </div>
           <div className="flex items-center gap-2">
+            {/* Mobile menu button */}
+            <button
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className="sm:hidden p-2 rounded-md hover:bg-muted/50 transition-colors"
+              aria-label="Toggle sidebar"
+            >
+              {sidebarOpen ? (
+                <X className="h-5 w-5" />
+              ) : (
+                <Menu className="h-5 w-5" />
+              )}
+            </button>
             <ThemeToggle />
           </div>
         </div>
       </header>
+
+      {/* Mobile Sidebar */}
+      {sidebarOpen && (
+        <div className="fixed inset-0 z-50 sm:hidden">
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm"
+            onClick={() => setSidebarOpen(false)}
+          />
+
+          {/* Sidebar */}
+          <div className="fixed left-0 top-0 h-full w-64 bg-background border-r shadow-lg">
+            <div className="flex items-center justify-between p-4 border-b">
+              <div className="flex items-center gap-3">
+                <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-cyan-400 to-blue-600" />
+                <h2 className="text-lg font-bold tracking-tight">Menu</h2>
+              </div>
+              <button
+                onClick={() => setSidebarOpen(false)}
+                className="p-2 rounded-md hover:bg-muted/50 transition-colors"
+                aria-label="Close sidebar"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <nav className="p-4 space-y-2">
+              <NavLink
+                to="/"
+                end
+                onClick={() => setSidebarOpen(false)}
+                className={({ isActive }) =>
+                  `flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    isActive
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                  }`
+                }
+              >
+                <div className="h-2 w-2 rounded-full bg-current" />
+                Overview
+              </NavLink>
+              <NavLink
+                to="/tracking"
+                onClick={() => setSidebarOpen(false)}
+                className={({ isActive }) =>
+                  `flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    isActive
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                  }`
+                }
+              >
+                <div className="h-2 w-2 rounded-full bg-current" />
+                Tracking
+              </NavLink>
+              <NavLink
+                to="/tokens"
+                onClick={() => setSidebarOpen(false)}
+                className={({ isActive }) =>
+                  `flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    isActive
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                  }`
+                }
+              >
+                <div className="h-2 w-2 rounded-full bg-current" />
+                Tokens
+              </NavLink>
+            </nav>
+          </div>
+        </div>
+      )}
+
       <main className="container mx-auto space-y-6 py-6">
         <Outlet />
       </main>
