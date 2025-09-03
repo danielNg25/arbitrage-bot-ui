@@ -152,201 +152,220 @@ export default function DebugInsights() {
           fontWeight = "font-bold";
         }
 
-        // Preserve the exact original line with colors applied to the content
-        const callMatch = trimmed.match(
-          /^(\s*)(\[(\d+)\]\s*(0x[a-fA-F0-9]+)::([a-zA-Z0-9_]+)\((.*)\))(.*)$/,
+        // First, highlight all function calls with white and bold
+        let processedLine = line.replace(
+          /(0x[a-fA-F0-9]+)::([a-zA-Z0-9_]+)/g,
+          '<span class="text-white font-black">$1::$2</span>',
         );
-        if (callMatch) {
-          const [, indent, callContent, gas, address, func, args, rest] =
-            callMatch;
-          // Color all gas numbers in brackets with a subtle color, rest of call content with status color
-          const coloredCall = callContent.replace(
-            /\[(\d+)\]/g,
-            '<span class="text-gray-400">[$1]</span>',
+
+        // Then color gas numbers
+        processedLine = processedLine.replace(
+          /\[(\d+)\]/g,
+          '<span class="text-gray-400">[$1]</span>',
+        );
+
+        // Color tree symbols in gray
+        processedLine = processedLine.replace(
+          /[├└│]/g,
+          '<span class="text-gray-500">$&</span>',
+        );
+
+        // Apply status color to the rest of the content
+        const contentStart = processedLine.search(/[^├└│\s]/);
+        if (contentStart !== -1) {
+          const beforeContent = processedLine.substring(0, contentStart);
+          const content = processedLine.substring(contentStart);
+          coloredLines.push(
+            `${beforeContent}<span class="${colorClass}">${content}</span>`,
           );
-          const finalCall = `<span class="${colorClass} ${fontWeight}">${coloredCall}</span>${rest}`;
-          // Color tree symbols in gray, keep content colored
-          const grayIndent = indent.replace(
-            /[├└│]/g,
-            '<span class="text-gray-500">$&</span>',
-          );
-          coloredLines.push(`${grayIndent}${finalCall}`);
         } else {
-          // Fallback: color tree symbols gray, gas numbers subtle, content with call color
-          const grayLine = line.replace(
-            /[├└│]/g,
-            '<span class="text-gray-500">$&</span>',
-          );
-          const contentStart = line.search(/[^├└│\s]/);
-          if (contentStart !== -1) {
-            const beforeContent = line.substring(0, contentStart);
-            const content = line.substring(contentStart);
-            const grayBefore = beforeContent.replace(
-              /[├└│]/g,
-              '<span class="text-gray-500">$&</span>',
-            );
-            // Color gas numbers in the content
-            const coloredContent = content.replace(
-              /\[(\d+)\]/g,
-              '<span class="text-gray-400">[$1]</span>',
-            );
-            coloredLines.push(
-              `${grayBefore}<span class="${colorClass} ${fontWeight}">${coloredContent}</span>`,
-            );
-          } else {
-            coloredLines.push(grayLine);
-          }
+          coloredLines.push(processedLine);
         }
       } else if (trimmed.includes("← [Return]")) {
-        // Success outcome - color tree symbols gray, content with optimistic color
-        const grayLine = line.replace(
+        // First, highlight all function calls with white and bold
+        let processedLine = line.replace(
+          /(0x[a-fA-F0-9]+)::([a-zA-Z0-9_]+)/g,
+          '<span class="text-white font-black">$1::$2</span>',
+        );
+
+        // Color tree symbols in gray
+        processedLine = processedLine.replace(
           /[├└│]/g,
           '<span class="text-gray-500">$&</span>',
         );
-        const contentStart = line.search(/[^├└│\s]/);
+
+        // Apply emerald color to the rest of the content
+        const contentStart = processedLine.search(/[^├└│\s]/);
         if (contentStart !== -1) {
-          const beforeContent = line.substring(0, contentStart);
-          const content = line.substring(contentStart);
-          const grayBefore = beforeContent.replace(
-            /[├└│]/g,
-            '<span class="text-gray-500">$&</span>',
-          );
+          const beforeContent = processedLine.substring(0, contentStart);
+          const content = processedLine.substring(contentStart);
           coloredLines.push(
-            `${grayBefore}<span class="text-emerald-400">${content}</span>`,
+            `${beforeContent}<span class="text-emerald-400">${content}</span>`,
           );
         } else {
-          coloredLines.push(grayLine);
+          coloredLines.push(processedLine);
         }
       } else if (trimmed.includes("← [Stop]")) {
-        // Stop outcome - color tree symbols gray, content with optimistic color
-        const grayLine = line.replace(
+        // First, highlight all function calls with white and bold
+        let processedLine = line.replace(
+          /(0x[a-fA-F0-9]+)::([a-zA-Z0-9_]+)/g,
+          '<span class="text-white font-black">$1::$2</span>',
+        );
+
+        // Color tree symbols in gray
+        processedLine = processedLine.replace(
           /[├└│]/g,
           '<span class="text-gray-500">$&</span>',
         );
-        const contentStart = line.search(/[^├└│\s]/);
+
+        // Apply emerald color to the rest of the content
+        const contentStart = processedLine.search(/[^├└│\s]/);
         if (contentStart !== -1) {
-          const beforeContent = line.substring(0, contentStart);
-          const content = line.substring(contentStart);
-          const grayBefore = beforeContent.replace(
-            /[├└│]/g,
-            '<span class="text-gray-500">$&</span>',
-          );
+          const beforeContent = processedLine.substring(0, contentStart);
+          const content = processedLine.substring(contentStart);
           coloredLines.push(
-            `${grayBefore}<span class="text-emerald-400">${content}</span>`,
+            `${beforeContent}<span class="text-emerald-400">${content}</span>`,
           );
         } else {
-          coloredLines.push(grayLine);
+          coloredLines.push(processedLine);
         }
       } else if (
         trimmed.includes("← [Revert]") ||
         trimmed.includes("custom error")
       ) {
-        // Failed outcome - color tree symbols gray, content red
-        const grayLine = line.replace(
+        // First, highlight all function calls with white and bold
+        let processedLine = line.replace(
+          /(0x[a-fA-F0-9]+)::([a-zA-Z0-9_]+)/g,
+          '<span class="text-white font-black">$1::$2</span>',
+        );
+
+        // Color tree symbols in gray
+        processedLine = processedLine.replace(
           /[├└│]/g,
           '<span class="text-gray-500">$&</span>',
         );
-        const contentStart = line.search(/[^├└│\s]/);
+
+        // Apply red color to the rest of the content
+        const contentStart = processedLine.search(/[^├└│\s]/);
         if (contentStart !== -1) {
-          const beforeContent = line.substring(0, contentStart);
-          const content = line.substring(contentStart);
-          const grayBefore = beforeContent.replace(
-            /[├└│]/g,
-            '<span class="text-gray-500">$&</span>',
-          );
+          const beforeContent = processedLine.substring(0, contentStart);
+          const content = processedLine.substring(contentStart);
           coloredLines.push(
-            `${grayBefore}<span class="text-red-300">${content}</span>`,
+            `${beforeContent}<span class="text-red-300">${content}</span>`,
           );
         } else {
-          coloredLines.push(grayLine);
+          coloredLines.push(processedLine);
         }
       } else if (trimmed.includes("emit ")) {
-        // Event emission - color tree symbols gray, content blue
-        const grayLine = line.replace(
+        // First, highlight all function calls with white and bold
+        let processedLine = line.replace(
+          /(0x[a-fA-F0-9]+)::([a-zA-Z0-9_]+)/g,
+          '<span class="text-white font-black">$1::$2</span>',
+        );
+
+        // Color tree symbols in gray
+        processedLine = processedLine.replace(
           /[├└│]/g,
           '<span class="text-gray-500">$&</span>',
         );
-        const contentStart = line.search(/[^├└│\s]/);
+
+        // Apply blue color to the rest of the content
+        const contentStart = processedLine.search(/[^├└│\s]/);
         if (contentStart !== -1) {
-          const beforeContent = line.substring(0, contentStart);
-          const content = line.substring(contentStart);
-          const grayBefore = beforeContent.replace(
-            /[├└│]/g,
-            '<span class="text-gray-500">$&</span>',
-          );
+          const beforeContent = processedLine.substring(0, contentStart);
+          const content = processedLine.substring(contentStart);
           coloredLines.push(
-            `${grayBefore}<span class="text-blue-400">${content}</span>`,
+            `${beforeContent}<span class="text-blue-400">${content}</span>`,
           );
         } else {
-          coloredLines.push(grayLine);
+          coloredLines.push(processedLine);
         }
       } else if (trimmed.includes("Gas used:") || trimmed.includes("Block:")) {
-        // Metadata - color tree symbols gray, content cyan
-        const grayLine = line.replace(
+        // First, highlight all function calls with white and bold
+        let processedLine = line.replace(
+          /(0x[a-fA-F0-9]+)::([a-zA-Z0-9_]+)/g,
+          '<span class="text-white font-black">$1::$2</span>',
+        );
+
+        // Color tree symbols in gray
+        processedLine = processedLine.replace(
           /[├└│]/g,
           '<span class="text-gray-500">$&</span>',
         );
-        const contentStart = line.search(/[^├└│\s]/);
+
+        // Apply cyan color to the rest of the content
+        const contentStart = processedLine.search(/[^├└│\s]/);
         if (contentStart !== -1) {
-          const beforeContent = line.substring(0, contentStart);
-          const content = line.substring(contentStart);
-          const grayBefore = beforeContent.replace(
-            /[├└│]/g,
-            '<span class="text-gray-500">$&</span>',
-          );
+          const beforeContent = processedLine.substring(0, contentStart);
+          const content = processedLine.substring(contentStart);
           coloredLines.push(
-            `${grayBefore}<span class="text-cyan-400 font-semibold">${content}</span>`,
+            `${beforeContent}<span class="text-cyan-400 font-semibold">${content}</span>`,
           );
         } else {
-          coloredLines.push(grayLine);
+          coloredLines.push(processedLine);
         }
       } else if (trimmed.includes("Error:")) {
-        // Error messages - color tree symbols gray, content red
-        const grayLine = line.replace(
+        // First, highlight all function calls with white and bold
+        let processedLine = line.replace(
+          /(0x[a-fA-F0-9]+)::([a-zA-Z0-9_]+)/g,
+          '<span class="text-white font-black">$1::$2</span>',
+        );
+
+        // Color tree symbols in gray
+        processedLine = processedLine.replace(
           /[├└│]/g,
           '<span class="text-gray-500">$&</span>',
         );
-        const contentStart = line.search(/[^├└│\s]/);
+
+        // Apply red color to the rest of the content
+        const contentStart = processedLine.search(/[^├└│\s]/);
         if (contentStart !== -1) {
-          const beforeContent = line.substring(0, contentStart);
-          const content = line.substring(contentStart);
-          const grayBefore = beforeContent.replace(
-            /[├└│]/g,
-            '<span class="text-gray-500">$&</span>',
-          );
+          const beforeContent = processedLine.substring(0, contentStart);
+          const content = processedLine.substring(contentStart);
           coloredLines.push(
-            `${grayBefore}<span class="text-red-400 font-bold">${content}</span>`,
+            `${beforeContent}<span class="text-red-400 font-bold">${content}</span>`,
           );
         } else {
-          coloredLines.push(grayLine);
+          coloredLines.push(processedLine);
         }
       } else if (trimmed.includes("Transaction successfully executed.")) {
-        // Success messages - color tree symbols gray, content with optimistic color
-        const grayLine = line.replace(
+        // First, highlight all function calls with white and bold
+        let processedLine = line.replace(
+          /(0x[a-fA-F0-9]+)::([a-zA-Z0-9_]+)/g,
+          '<span class="text-white font-black">$1::$2</span>',
+        );
+
+        // Color tree symbols in gray
+        processedLine = processedLine.replace(
           /[├└│]/g,
           '<span class="text-gray-500">$&</span>',
         );
-        const contentStart = line.search(/[^├└│\s]/);
+
+        // Apply emerald color to the rest of the content
+        const contentStart = processedLine.search(/[^├└│\s]/);
         if (contentStart !== -1) {
-          const beforeContent = line.substring(0, contentStart);
-          const content = line.substring(contentStart);
-          const grayBefore = beforeContent.replace(
-            /[├└│]/g,
-            '<span class="text-gray-500">$&</span>',
-          );
+          const beforeContent = processedLine.substring(0, contentStart);
+          const content = processedLine.substring(contentStart);
           coloredLines.push(
-            `${grayBefore}<span class="text-emerald-400 font-bold">${content}</span>`,
+            `${beforeContent}<span class="text-emerald-400 font-bold">${content}</span>`,
           );
         } else {
-          coloredLines.push(grayLine);
+          coloredLines.push(processedLine);
         }
       } else {
-        // Other lines - color tree symbols gray, preserve rest
-        const grayLine = line.replace(
+        // First, highlight all function calls with white and bold
+        let processedLine = line.replace(
+          /(0x[a-fA-F0-9]+)::([a-zA-Z0-9_]+)/g,
+          '<span class="text-white font-black">$1::$2</span>',
+        );
+
+        // Color tree symbols in gray
+        processedLine = processedLine.replace(
           /[├└│]/g,
           '<span class="text-gray-500">$&</span>',
         );
-        coloredLines.push(grayLine);
+
+        coloredLines.push(processedLine);
       }
     });
 
@@ -428,10 +447,8 @@ export default function DebugInsights() {
         if (json && typeof json.trace === "string") {
           const coloredTrace = renderColoredTrace(json.trace);
           const meta: string[] = [];
-          if (json.gas_used) meta.push(`Gas used: ${json.gas_used}`);
           if (json.block_number) meta.push(`Block: ${json.block_number}`);
           if (json.error) meta.push(`Error: ${json.error}`);
-          if (json.success !== undefined) meta.push(`Success: ${json.success}`);
 
           const coloredMeta = meta
             .map((line) => {
