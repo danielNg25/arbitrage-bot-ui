@@ -174,47 +174,43 @@ export function DailyNetworkCard({
       )} */}
 
       {/* Executor Balances Section */}
-      {(executorBalances && executorBalances.length > 0) || balancesLoading ? (
-        <div className="px-6 pb-6 border-t border-border/60 pt-4">
-          <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-3">
-            Executor Balances
-          </p>
-          <div className="space-y-2">
-            {balancesLoading ? (
-              <div className="text-xs text-muted-foreground">
-                Loading balances...
-              </div>
-            ) : executorBalances && executorBalances.length > 0 ? (
-              executorBalances.map(({ address, balance }) => (
-                <div
-                  key={address}
-                  className="flex items-center justify-between"
+      <div className="px-6 pb-6 border-t border-border/60 pt-4">
+        <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-3">
+          Executor Balances
+        </p>
+        <div className="space-y-2">
+          {balancesLoading ? (
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <div className="h-3 w-3 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent"></div>
+              Loading balances...
+            </div>
+          ) : executorBalances && executorBalances.length > 0 ? (
+            executorBalances.map(({ address, balance }) => (
+              <div key={address} className="flex items-center justify-between">
+                <a
+                  href={getBlockExplorerUrl(
+                    address,
+                    networkData?.chain_id || aggregation.network_id,
+                    networkData?.block_explorer,
+                  )}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs font-mono text-blue-400 hover:text-blue-300 truncate max-w-[120px] underline transition-colors"
                 >
-                  <a
-                    href={getBlockExplorerUrl(
-                      address,
-                      networkData?.chain_id || aggregation.network_id,
-                      networkData?.block_explorer,
-                    )}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-xs font-mono text-blue-400 hover:text-blue-300 truncate max-w-[120px] underline transition-colors"
-                  >
-                    {address.slice(0, 6)}...{address.slice(-4)}
-                  </a>
-                  <span className="text-sm font-mono tabular-nums text-yellow-400">
-                    {formatBalance(balance)}
-                  </span>
-                </div>
-              ))
-            ) : (
-              <div className="text-xs text-muted-foreground">
-                No executors found
+                  {address.slice(0, 6)}...{address.slice(-4)}
+                </a>
+                <span className="text-sm font-mono tabular-nums text-yellow-400">
+                  {formatBalance(balance)}
+                </span>
               </div>
-            )}
-          </div>
+            ))
+          ) : (
+            <div className="text-xs text-muted-foreground">
+              No executors found
+            </div>
+          )}
         </div>
-      ) : null}
+      </div>
     </div>
   );
 }

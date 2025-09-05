@@ -328,7 +328,7 @@ export default function Index() {
           </div>
         ) : null}
 
-        {loading ? (
+        {aggregationsLoading ? (
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3">
             {Array.from({ length: 7 }).map((_, i) => (
               <div
@@ -337,10 +337,10 @@ export default function Index() {
               />
             ))}
           </div>
-        ) : (
+        ) : timeAggregations && timeAggregations.length > 0 ? (
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 max-h-[420px] overflow-y-auto pr-1">
             {timeAggregations
-              ?.sort((a, b) => b.total_profit_usd - a.total_profit_usd)
+              .sort((a, b) => b.total_profit_usd - a.total_profit_usd)
               .map((aggregation) => (
                 <DailyNetworkCard
                   key={aggregation.network_id}
@@ -352,6 +352,10 @@ export default function Index() {
                   networkData={getNetworkData(aggregation.network_id)}
                 />
               ))}
+          </div>
+        ) : (
+          <div className="text-center py-8 text-muted-foreground">
+            No data available for the selected date
           </div>
         )}
       </section>
