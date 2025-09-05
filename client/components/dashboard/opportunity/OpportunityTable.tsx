@@ -1,6 +1,7 @@
 import React, { useState } from "react";
-import { ArrowUpDown, ArrowDown, ArrowUp } from "lucide-react";
+import { ArrowUpDown, ArrowDown, ArrowUp, Eye } from "lucide-react";
 import { getStatusDisplayName } from "@shared/api";
+import { Button } from "@/components/ui/button";
 
 export type OpportunityRow = {
   id?: string;
@@ -101,6 +102,7 @@ export default function OpportunityTable({
   sortDir,
   onSortChange,
   onRowClick,
+  onPreviewClick,
   highlight = {},
 }: {
   rows: OpportunityRow[];
@@ -108,6 +110,7 @@ export default function OpportunityTable({
   sortDir: SortDir;
   onSortChange: (key: SortKey) => void;
   onRowClick?: (row: OpportunityRow) => void;
+  onPreviewClick?: (row: OpportunityRow) => void;
   highlight?: Record<string, boolean>;
 }) {
   const getKey = (r: OpportunityRow) =>
@@ -165,6 +168,7 @@ export default function OpportunityTable({
                   <SortIcon active={sortKey === "created_at"} dir={sortDir} />
                 </button>
               </th>
+              <th className="px-4 py-3 text-center font-semibold">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -235,6 +239,20 @@ export default function OpportunityTable({
                   </td>
                   <td className="px-4 py-3 align-top">
                     {formatLocalTimestamp(r.created_at * 1000)}
+                  </td>
+                  <td className="px-4 py-3 align-top text-center">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onPreviewClick?.(r);
+                      }}
+                      className="h-8 w-8 p-0"
+                      aria-label={`Preview details for opportunity ${r.id || r.created_at}`}
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Button>
                   </td>
                 </tr>
               );

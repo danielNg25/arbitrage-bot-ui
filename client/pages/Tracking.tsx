@@ -14,8 +14,8 @@ import FilterControls, {
   type StatusFilter,
 } from "@/components/dashboard/opportunity/FilterControls";
 import Pagination from "@/components/dashboard/opportunity/Pagination";
+import OpportunityPreviewDialog from "@/components/dashboard/opportunity/OpportunityPreviewDialog";
 import type { Network, OpportunityResponse, PaginationInfo } from "@shared/api";
-import { useNavigate } from "react-router-dom";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 
@@ -35,6 +35,8 @@ function buildDummyNetworks(): Network[] {
       created_at: Math.floor(Date.now() / 1000),
       executed_opportunities: 0,
       success_rate: null,
+      router_address: null,
+      executors: [],
     },
     {
       chain_id: 137,
@@ -50,6 +52,8 @@ function buildDummyNetworks(): Network[] {
       created_at: Math.floor(Date.now() / 1000),
       executed_opportunities: 0,
       success_rate: null,
+      router_address: null,
+      executors: [],
     },
     {
       chain_id: 56,
@@ -65,6 +69,8 @@ function buildDummyNetworks(): Network[] {
       created_at: Math.floor(Date.now() / 1000),
       executed_opportunities: 0,
       success_rate: null,
+      router_address: null,
+      executors: [],
     },
   ];
 }
@@ -143,6 +149,11 @@ export default function Tracking() {
   const [estimateProfitMax, setEstimateProfitMax] = useState<number | "">("");
   const [timestampFrom, setTimestampFrom] = useState<string>("");
   const [timestampTo, setTimestampTo] = useState<string>("");
+
+  // Preview dialog state
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [selectedOpportunity, setSelectedOpportunity] =
+    useState<OpportunityRow | null>(null);
 
   // Applied filter states - these are what actually trigger API calls
   const [appliedProfitMin, setAppliedProfitMin] = useState<number | "">("");
@@ -304,8 +315,6 @@ export default function Tracking() {
 
     return () => clearInterval(interval);
   }, []);
-
-  const navigate = useNavigate();
 
   // Convert OpportunityResponse to OpportunityRow for the table and apply sorting
   const tableRows: OpportunityRow[] = useMemo(() => {
@@ -573,6 +582,21 @@ export default function Tracking() {
     setPage(newPage + 1);
   };
 
+  // Preview dialog handlers
+  const handlePreviewClick = (opportunity: OpportunityRow) => {
+    setSelectedOpportunity(opportunity);
+    setPreviewOpen(true);
+  };
+
+  const handleClosePreview = () => {
+    setPreviewOpen(false);
+    setSelectedOpportunity(null);
+  };
+
+  const handleNavigateToOpportunity = (opportunity: OpportunityRow) => {
+    setSelectedOpportunity(opportunity);
+  };
+
   // Apply filters when Apply Filters button is clicked
   const applyFilters = useCallback(() => {
     setAppliedProfitMin(profitMin);
@@ -726,12 +750,10 @@ export default function Tracking() {
               onRowClick={(r) => {
                 const rid = r.id || String(r.created_at);
                 console.log("Row clicked:", { rid });
-                console.log(
-                  "Navigating in current tab:",
-                  `/opportunities/${rid}`,
-                );
-                navigate(`/opportunities/${rid}`);
+                console.log("Opening in new tab:", `/opportunities/${rid}`);
+                window.open(`/opportunities/${rid}`, "_blank");
               }}
+              onPreviewClick={handlePreviewClick}
             />
           )}
           {pagination && (
@@ -755,6 +777,20 @@ export default function Tracking() {
           )}
         </>
       )}
+
+      {/* Preview Dialog */}
+      <OpportunityPreviewDialog
+        isOpen={previewOpen}
+        onClose={handleClosePreview}
+        selectedOpportunity={selectedOpportunity}
+        allOpportunities={tableRows}
+        onNavigateToOpportunity={handleNavigateToOpportunity}
+        networks={networks.map((n) => ({
+          chain_id: n.chain_id,
+          name: n.name,
+          block_explorer: n.block_explorer,
+        }))}
+      />
     </section>
   );
 }
