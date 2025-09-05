@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button";
 import { ProfitChart } from "@/components/dashboard/ProfitChart";
 import { DailyNetworkCard } from "@/components/dashboard/DailyNetworkCard";
 import { useTimeAggregations } from "@/hooks/use-time-aggregations";
+import { useExecutorBalances } from "@/hooks/use-executor-balances";
+import { useNetworks } from "@/hooks/use-networks";
 import { Calendar } from "lucide-react";
 import {
   Popover,
@@ -62,6 +64,24 @@ export default function Index() {
     error: aggregationsError,
     refetch: refetchAggregations,
   } = useTimeAggregations("daily", undefined, selectedDate); // Get data for all networks for selected date
+
+  const { networks } = useNetworks();
+  const { networksWithBalances, loading: balancesLoading } =
+    useExecutorBalances(networks);
+
+  // Helper function to get executor balances for a specific network
+  const getExecutorBalancesForNetwork = (networkId: number) => {
+    const network = networksWithBalances.find((n) => n.chain_id === networkId);
+    return network?.executorBalances || [];
+  };
+
+  // Helper function to get network data for a specific network
+  const getNetworkData = (networkId: number) => {
+    const network = networksWithBalances.find((n) => n.chain_id === networkId);
+    return network
+      ? { chain_id: network.chain_id, block_explorer: network.block_explorer }
+      : undefined;
+  };
 
   // Debug logging
   useEffect(() => {
@@ -325,6 +345,11 @@ export default function Index() {
                 <DailyNetworkCard
                   key={aggregation.network_id}
                   aggregation={aggregation}
+                  executorBalances={getExecutorBalancesForNetwork(
+                    aggregation.network_id,
+                  )}
+                  balancesLoading={balancesLoading}
+                  networkData={getNetworkData(aggregation.network_id)}
                 />
               ))}
           </div>

@@ -95,6 +95,8 @@ export interface Network {
   block_explorer: string | null;
   executed: number | null;
   success: number | null;
+  router_address: string | null;
+  executors: string[];
   failed: number | null;
   total_profit_usd: number;
   total_gas_usd: number;

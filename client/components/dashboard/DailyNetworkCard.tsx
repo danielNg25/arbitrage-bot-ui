@@ -34,11 +34,48 @@ const formatPeriodStart = (startTime: string) => {
   }
 };
 
+const formatBalance = (balanceWei: string) => {
+  // Convert wei to ETH (1 ETH = 10^18 wei)
+  const balanceEth = parseInt(balanceWei, 16) / Math.pow(10, 18);
+  return balanceEth.toFixed(4);
+};
+
+const getBlockExplorerUrl = (
+  address: string,
+  networkId: number,
+  blockExplorer?: string | null,
+) => {
+  if (blockExplorer) {
+    return `${blockExplorer}/address/${address}`;
+  }
+
+  // Fallback to common block explorers based on chain ID
+  const explorerMap: { [key: number]: string } = {
+    1: "https://etherscan.io",
+    137: "https://polygonscan.com",
+    56: "https://bscscan.com",
+    250: "https://ftmscan.com",
+    43114: "https://snowtrace.io",
+    42161: "https://arbiscan.io",
+    10: "https://optimistic.etherscan.io",
+    8453: "https://basescan.org",
+  };
+
+  const baseUrl = explorerMap[networkId] || "https://etherscan.io";
+  return `${baseUrl}/address/${address}`;
+};
+
 export function DailyNetworkCard({
   aggregation,
+  executorBalances,
+  balancesLoading,
+  networkData,
   className,
 }: {
   aggregation: TimeAggregationResponse;
+  executorBalances?: { address: string; balance: string }[];
+  balancesLoading?: boolean;
+  networkData?: { chain_id: number; block_explorer: string | null };
   className?: string;
 }) {
   const navigate = useNavigate();
@@ -135,6 +172,49 @@ export function DailyNetworkCard({
           </div>
         </div>
       )} */}
+
+      {/* Executor Balances Section */}
+      {(executorBalances && executorBalances.length > 0) || balancesLoading ? (
+        <div className="px-6 pb-6 border-t border-border/60 pt-4">
+          <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-3">
+            Executor Balances
+          </p>
+          <div className="space-y-2">
+            {balancesLoading ? (
+              <div className="text-xs text-muted-foreground">
+                Loading balances...
+              </div>
+            ) : executorBalances && executorBalances.length > 0 ? (
+              executorBalances.map(({ address, balance }) => (
+                <div
+                  key={address}
+                  className="flex items-center justify-between"
+                >
+                  <a
+                    href={getBlockExplorerUrl(
+                      address,
+                      networkData?.chain_id || aggregation.network_id,
+                      networkData?.block_explorer,
+                    )}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs font-mono text-blue-400 hover:text-blue-300 truncate max-w-[120px] underline transition-colors"
+                  >
+                    {address.slice(0, 6)}...{address.slice(-4)}
+                  </a>
+                  <span className="text-sm font-mono tabular-nums text-yellow-400">
+                    {formatBalance(balance)}
+                  </span>
+                </div>
+              ))
+            ) : (
+              <div className="text-xs text-muted-foreground">
+                No executors found
+              </div>
+            )}
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
