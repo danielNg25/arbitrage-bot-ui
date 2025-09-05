@@ -51,7 +51,15 @@ const fmtUSD = new Intl.NumberFormat("en-US", {
 function iso(v?: number | null) {
   if (!v && v !== 0) return "N/A";
   try {
-    return new Date(v!).toISOString().replace("T", " ").split(".")[0];
+    return new Date(v!).toLocaleString("en-US", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false,
+    });
   } catch {
     return "N/A";
   }

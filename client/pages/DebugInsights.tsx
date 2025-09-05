@@ -494,7 +494,14 @@ export default function DebugInsights() {
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch(`/api/v1/opportunities/${id}`);
+        // Check if the ID looks like a transaction hash (starts with 0x and is 66 characters)
+        const isTxHash = id.startsWith("0x") && id.length === 66;
+        const apiUrl = isTxHash
+          ? `/api/v1/opportunities/tx/${id}`
+          : `/api/v1/opportunities/${id}`;
+
+        console.log(`Fetching opportunity data from: ${apiUrl}`);
+        const res = await fetch(apiUrl);
         if (!res.ok) throw new Error("api");
         const data = (await res.json()) as ApiResponse;
         const o: any = data.opportunity || {};

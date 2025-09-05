@@ -5,6 +5,7 @@ import { handleDemo } from "./routes/demo";
 import { handleNetworks } from "./routes/networks";
 import { handleOpportunities } from "./routes/opportunities";
 import { handleOpportunityDetails } from "./routes/opportunity-details";
+import { handleOpportunityByTx } from "./routes/opportunity-by-tx";
 import { handleTokenPerformance } from "./routes/token-performance";
 import { handleTimeAggregations } from "./routes/time-aggregations";
 import { handleSummaryAggregations } from "./routes/summary-aggregations";
@@ -26,6 +27,7 @@ export function createServer() {
   app.get("/api/v1/networks", handleNetworks);
   app.get("/api/v1/opportunities", handleOpportunities);
   app.get("/api/v1/opportunities/:id", handleOpportunityDetails);
+  app.get("/api/v1/opportunities/tx/:tx_hash", handleOpportunityByTx);
   app.get("/api/v1/tokens/performance", handleTokenPerformance);
   app.get("/api/v1/time-aggregations", handleTimeAggregations);
   app.get("/api/v1/summary-aggregations", handleSummaryAggregations);
