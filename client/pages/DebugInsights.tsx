@@ -16,6 +16,32 @@ function toMillis(s?: string | number | null) {
   return isNaN(t) ? null : t;
 }
 
+function formatTokenAmount(amount: string, decimals: number): string {
+  if (!amount) return "0";
+
+  // Convert the raw amount to a decimal value based on the token's decimals
+  const value = BigInt(amount);
+  const divisor = BigInt(10) ** BigInt(decimals);
+
+  // Calculate the integer and fractional parts
+  const integerPart = value / divisor;
+  const fractionalPart = value % divisor;
+
+  // Format the fractional part to have leading zeros if needed
+  let fractionalString = fractionalPart.toString();
+  while (fractionalString.length < decimals) {
+    fractionalString = "0" + fractionalString;
+  }
+
+  // Trim trailing zeros
+  fractionalString = fractionalString.replace(/0+$/, "");
+
+  // Return the formatted amount
+  return fractionalString
+    ? `${integerPart}.${fractionalString}`
+    : `${integerPart}`;
+}
+
 function formatStatus(status: string): string {
   return status
     .replace(/([A-Z])/g, " $1")
@@ -111,7 +137,6 @@ export default function DebugInsights() {
     lines.forEach((line) => {
       const trimmed = line.trim();
       if (trimmed.includes("← [Return]")) {
-        // Find the most recent call line above this return
         for (let i = coloredLines.length - 1; i >= 0; i--) {
           const prevLine = coloredLines[i];
           if (prevLine.includes("::") && prevLine.includes("[")) {
@@ -123,7 +148,6 @@ export default function DebugInsights() {
         trimmed.includes("← [Revert]") ||
         trimmed.includes("custom error")
       ) {
-        // Find the most recent call line above this revert
         for (let i = coloredLines.length - 1; i >= 0; i--) {
           const prevLine = coloredLines[i];
           if (prevLine.includes("::") && prevLine.includes("[")) {
@@ -139,9 +163,8 @@ export default function DebugInsights() {
       const trimmed = line.trim();
 
       if (trimmed.includes("::") && trimmed.includes("[")) {
-        // This is a call line
         const outcome = callOutcomes.get(line);
-        let colorClass = "text-gray-300"; // unknown - lighter gray
+        let colorClass = "text-gray-300";
         let fontWeight = "font-normal";
 
         if (outcome === "success") {
@@ -152,25 +175,21 @@ export default function DebugInsights() {
           fontWeight = "font-bold";
         }
 
-        // First, highlight all function calls with white and bold
         let processedLine = line.replace(
           /(0x[a-fA-F0-9]+)::([a-zA-Z0-9_]+)/g,
           '<span class="text-white font-black">$1::$2</span>',
         );
 
-        // Then color gas numbers
         processedLine = processedLine.replace(
           /\[(\d+)\]/g,
           '<span class="text-gray-400">[$1]</span>',
         );
 
-        // Color tree symbols in gray
         processedLine = processedLine.replace(
           /[├└│]/g,
           '<span class="text-gray-500">$&</span>',
         );
 
-        // Apply status color to the rest of the content
         const contentStart = processedLine.search(/[^├└│\s]/);
         if (contentStart !== -1) {
           const beforeContent = processedLine.substring(0, contentStart);
@@ -182,19 +201,16 @@ export default function DebugInsights() {
           coloredLines.push(processedLine);
         }
       } else if (trimmed.includes("← [Return]")) {
-        // First, highlight all function calls with white and bold
         let processedLine = line.replace(
           /(0x[a-fA-F0-9]+)::([a-zA-Z0-9_]+)/g,
           '<span class="text-white font-black">$1::$2</span>',
         );
 
-        // Color tree symbols in gray
         processedLine = processedLine.replace(
           /[├└│]/g,
           '<span class="text-gray-500">$&</span>',
         );
 
-        // Apply emerald color to the rest of the content
         const contentStart = processedLine.search(/[^├└│\s]/);
         if (contentStart !== -1) {
           const beforeContent = processedLine.substring(0, contentStart);
@@ -206,19 +222,16 @@ export default function DebugInsights() {
           coloredLines.push(processedLine);
         }
       } else if (trimmed.includes("← [Stop]")) {
-        // First, highlight all function calls with white and bold
         let processedLine = line.replace(
           /(0x[a-fA-F0-9]+)::([a-zA-Z0-9_]+)/g,
           '<span class="text-white font-black">$1::$2</span>',
         );
 
-        // Color tree symbols in gray
         processedLine = processedLine.replace(
           /[├└│]/g,
           '<span class="text-gray-500">$&</span>',
         );
 
-        // Apply emerald color to the rest of the content
         const contentStart = processedLine.search(/[^├└│\s]/);
         if (contentStart !== -1) {
           const beforeContent = processedLine.substring(0, contentStart);
@@ -233,19 +246,16 @@ export default function DebugInsights() {
         trimmed.includes("← [Revert]") ||
         trimmed.includes("custom error")
       ) {
-        // First, highlight all function calls with white and bold
         let processedLine = line.replace(
           /(0x[a-fA-F0-9]+)::([a-zA-Z0-9_]+)/g,
           '<span class="text-white font-black">$1::$2</span>',
         );
 
-        // Color tree symbols in gray
         processedLine = processedLine.replace(
           /[├└│]/g,
           '<span class="text-gray-500">$&</span>',
         );
 
-        // Apply red color to the rest of the content
         const contentStart = processedLine.search(/[^├└│\s]/);
         if (contentStart !== -1) {
           const beforeContent = processedLine.substring(0, contentStart);
@@ -257,19 +267,16 @@ export default function DebugInsights() {
           coloredLines.push(processedLine);
         }
       } else if (trimmed.includes("emit ")) {
-        // First, highlight all function calls with white and bold
         let processedLine = line.replace(
           /(0x[a-fA-F0-9]+)::([a-zA-Z0-9_]+)/g,
           '<span class="text-white font-black">$1::$2</span>',
         );
 
-        // Color tree symbols in gray
         processedLine = processedLine.replace(
           /[├└│]/g,
           '<span class="text-gray-500">$&</span>',
         );
 
-        // Apply blue color to the rest of the content
         const contentStart = processedLine.search(/[^├└│\s]/);
         if (contentStart !== -1) {
           const beforeContent = processedLine.substring(0, contentStart);
@@ -281,19 +288,16 @@ export default function DebugInsights() {
           coloredLines.push(processedLine);
         }
       } else if (trimmed.includes("Gas used:") || trimmed.includes("Block:")) {
-        // First, highlight all function calls with white and bold
         let processedLine = line.replace(
           /(0x[a-fA-F0-9]+)::([a-zA-Z0-9_]+)/g,
           '<span class="text-white font-black">$1::$2</span>',
         );
 
-        // Color tree symbols in gray
         processedLine = processedLine.replace(
           /[├└│]/g,
           '<span class="text-gray-500">$&</span>',
         );
 
-        // Apply cyan color to the rest of the content
         const contentStart = processedLine.search(/[^├└│\s]/);
         if (contentStart !== -1) {
           const beforeContent = processedLine.substring(0, contentStart);
@@ -305,19 +309,16 @@ export default function DebugInsights() {
           coloredLines.push(processedLine);
         }
       } else if (trimmed.includes("Error:")) {
-        // First, highlight all function calls with white and bold
         let processedLine = line.replace(
           /(0x[a-fA-F0-9]+)::([a-zA-Z0-9_]+)/g,
           '<span class="text-white font-black">$1::$2</span>',
         );
 
-        // Color tree symbols in gray
         processedLine = processedLine.replace(
           /[├└│]/g,
           '<span class="text-gray-500">$&</span>',
         );
 
-        // Apply red color to the rest of the content
         const contentStart = processedLine.search(/[^├└│\s]/);
         if (contentStart !== -1) {
           const beforeContent = processedLine.substring(0, contentStart);
@@ -329,19 +330,16 @@ export default function DebugInsights() {
           coloredLines.push(processedLine);
         }
       } else if (trimmed.includes("Transaction successfully executed.")) {
-        // First, highlight all function calls with white and bold
         let processedLine = line.replace(
           /(0x[a-fA-F0-9]+)::([a-zA-Z0-9_]+)/g,
           '<span class="text-white font-black">$1::$2</span>',
         );
 
-        // Color tree symbols in gray
         processedLine = processedLine.replace(
           /[├└│]/g,
           '<span class="text-gray-500">$&</span>',
         );
 
-        // Apply emerald color to the rest of the content
         const contentStart = processedLine.search(/[^├└│\s]/);
         if (contentStart !== -1) {
           const beforeContent = processedLine.substring(0, contentStart);
@@ -353,13 +351,11 @@ export default function DebugInsights() {
           coloredLines.push(processedLine);
         }
       } else {
-        // First, highlight all function calls with white and bold
         let processedLine = line.replace(
           /(0x[a-fA-F0-9]+)::([a-zA-Z0-9_]+)/g,
           '<span class="text-white font-black">$1::$2</span>',
         );
 
-        // Color tree symbols in gray
         processedLine = processedLine.replace(
           /[├└│]/g,
           '<span class="text-gray-500">$&</span>',
@@ -441,6 +437,12 @@ export default function DebugInsights() {
 
       const text = await res.text();
       let lines: string[] = [];
+      let revenue: string | null = null;
+      // Use a default receiver address if the env variable is not set
+      const receiverAddress = (
+        import.meta.env.VITE_RECEIVER_ADDRESS ||
+        "0xF90E54B26866edBffedAaAC63587163c0305fff7"
+      ).toLowerCase();
 
       try {
         const json = JSON.parse(text);
@@ -449,6 +451,46 @@ export default function DebugInsights() {
           const meta: string[] = [];
           if (json.block_number) meta.push(`Block: ${json.block_number}`);
           if (json.error) meta.push(`Error: ${json.error}`);
+
+          // Check for Transfer event with matching receiver address
+          const traceLines = json.trace.split("\n");
+          for (const line of traceLines) {
+            const trimmed = line.trim();
+            if (trimmed.includes("emit Transfer")) {
+              // Updated regex to handle optional spaces and scientific notation
+              const match = trimmed.match(
+                /emit\s+Transfer\s*\(\s*param0:\s*(0x[a-fA-F0-9]{40})\s*,\s*param1:\s*(0x[a-fA-F0-9]{40})\s*,\s*param2:\s*(\d+)(?:\s*\[[\d.e-]+\])?\s*\)/,
+              );
+              if (match) {
+                if (
+                  match[2] &&
+                  receiverAddress &&
+                  match[2].toLowerCase() === receiverAddress
+                ) {
+                  revenue = match[3]; // Extract the amount as revenue
+                  break;
+                }
+              }
+            }
+          }
+
+          // Append revenue or "Invalid opportunity"
+          if (revenue) {
+            // Apply token decimals (default to 18 if not available)
+            const decimals = profitTokenDecimals ?? 18;
+            const formattedRevenue = formatTokenAmount(revenue, decimals);
+
+            // Get token symbol if available
+            const profitToken = detail?.profit_token?.toLowerCase() || "";
+            const tokenSymbol =
+              (profitToken && tokenMeta[profitToken]?.symbol) || "tokens";
+
+            meta.push(
+              `Revenue: ${formattedRevenue} ${tokenSymbol} (${revenue} raw)`,
+            );
+          } else {
+            meta.push("Invalid opportunity");
+          }
 
           const coloredMeta = meta
             .map((line) => {
@@ -460,17 +502,89 @@ export default function DebugInsights() {
                 return `<span class="text-red-400 font-bold">${line}</span>`;
               if (line.includes("Success:"))
                 return `<span class="text-green-400 font-bold">${line}</span>`;
+              if (line.includes("Revenue:"))
+                return `<span class="text-green-400 font-bold">${line}</span>`;
+              if (line.includes("Invalid opportunity"))
+                return `<span class="text-red-400 font-bold">${line}</span>`;
               return `<span class="text-gray-400">${line}</span>`;
             })
-            .join("");
+            .join("\n");
 
           setTermLines((prev) => [...prev, coloredTrace, coloredMeta]);
         } else {
           lines = text.split(/\r?\n/);
+          for (const line of lines) {
+            const trimmed = line.trim();
+            if (trimmed.includes("emit Transfer")) {
+              const match = trimmed.match(
+                /emit\s+Transfer\s*\(\s*param0:\s*(0x[a-fA-F0-9]{40})\s*,\s*param1:\s*(0x[a-fA-F0-9]{40})\s*,\s*param2:\s*(\d+)(?:\s*\[[\d.e-]+\])?\s*\)/,
+              );
+              if (match) {
+                if (
+                  match[2] &&
+                  receiverAddress &&
+                  match[2].toLowerCase() === receiverAddress
+                ) {
+                  revenue = match[3];
+                  break;
+                }
+              }
+            }
+          }
+          if (revenue) {
+            // Apply token decimals (default to 18 if not available)
+            const decimals = profitTokenDecimals ?? 18;
+            const formattedRevenue = formatTokenAmount(revenue, decimals);
+
+            // Get token symbol if available
+            const profitToken = detail?.profit_token?.toLowerCase() || "";
+            const tokenSymbol =
+              (profitToken && tokenMeta[profitToken]?.symbol) || "tokens";
+
+            lines.push(
+              `Revenue: ${formattedRevenue} ${tokenSymbol} (${revenue} raw)`,
+            );
+          } else {
+            lines.push("Invalid opportunity");
+          }
           setTermLines((prev) => [...prev, ...lines]);
         }
       } catch {
         lines = text.split(/\r?\n/);
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (trimmed.includes("emit Transfer")) {
+            const match = trimmed.match(
+              /emit\s+Transfer\s*\(\s*param0:\s*(0x[a-fA-F0-9]{40})\s*,\s*param1:\s*(0x[a-fA-F0-9]{40})\s*,\s*param2:\s*(\d+)(?:\s*\[[\d.e-]+\])?\s*\)/,
+            );
+            if (match) {
+              if (
+                match[2] &&
+                receiverAddress &&
+                match[2].toLowerCase() === receiverAddress
+              ) {
+                revenue = match[3];
+                break;
+              }
+            }
+          }
+        }
+        if (revenue) {
+          // Apply token decimals (default to 18 if not available)
+          const decimals = profitTokenDecimals ?? 18;
+          const formattedRevenue = formatTokenAmount(revenue, decimals);
+
+          // Get token symbol if available
+          const profitToken = detail?.profit_token?.toLowerCase() || "";
+          const tokenSymbol =
+            (profitToken && tokenMeta[profitToken]?.symbol) || "tokens";
+
+          lines.push(
+            `Revenue: ${formattedRevenue} ${tokenSymbol} (${revenue} raw)`,
+          );
+        } else {
+          lines.push("Invalid opportunity");
+        }
         setTermLines((prev) => [...prev, ...lines]);
       }
     } catch (e: any) {
@@ -494,13 +608,11 @@ export default function DebugInsights() {
       setLoading(true);
       setError(null);
       try {
-        // Check if the ID looks like a transaction hash (starts with 0x and is 66 characters)
         const isTxHash = id.startsWith("0x") && id.length === 66;
         const apiUrl = isTxHash
           ? `/api/v1/opportunities/tx/${id}`
           : `/api/v1/opportunities/${id}`;
 
-        console.log(`Fetching opportunity data from: ${apiUrl}`);
         const res = await fetch(apiUrl);
         if (!res.ok) throw new Error("api");
         const data = (await res.json()) as ApiResponse;
@@ -544,6 +656,8 @@ export default function DebugInsights() {
           created_at: createdAt,
           updated_at: updatedAt,
           source_block_timestamp: null,
+          received_at: o.received_at ?? null,
+          send_at: o.send_at ?? null,
           source_tx: o.source_tx ?? null,
           source_block_number: o.source_block_number ?? null,
           source_log_index: o.source_log_index ?? null,

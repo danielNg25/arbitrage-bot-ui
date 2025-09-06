@@ -10,6 +10,8 @@ export type OpportunityCombined = {
   updated_at: number;
   source_block_timestamp?: number | null;
   execute_block_timestamp?: number | null; // New field for execute block time
+  received_at?: string | null; // ISO 8601
+  send_at?: string | null; // ISO 8601
   // Tx/blocks
   source_tx?: string | null;
   source_block_number?: number | null;
@@ -60,6 +62,28 @@ function iso(v?: number | null) {
       second: "2-digit",
       hour12: false,
     });
+  } catch {
+    return "N/A";
+  }
+}
+
+function formatISODate(isoString?: string | null) {
+  if (!isoString) return "N/A";
+  try {
+    const date = new Date(isoString);
+    const formatted = date.toLocaleString("en-US", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false,
+    });
+
+    // Add milliseconds
+    const ms = date.getMilliseconds().toString().padStart(3, "0");
+    return `${formatted}.${ms}`;
   } catch {
     return "N/A";
   }
@@ -340,6 +364,7 @@ export default function DebugDetails({
             "Source Tx Block Time",
             iso(detail.source_block_timestamp ?? null),
           )}
+          {kv("Received At", formatISODate(detail.received_at))}
           {kv("Source Log Index", detail.source_log_index ?? "N/A")}
           {kv(
             "Simulation Time (ms)",
@@ -381,6 +406,7 @@ export default function DebugDetails({
             "Execute Tx Block Time",
             iso(detail.execute_block_timestamp ?? null),
           )}
+          {kv("Send At", formatISODate(detail.send_at))}
           {kv(
             "Gas",
             detail.gas_token_amount || detail.gas_usd != null ? (
