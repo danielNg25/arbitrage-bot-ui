@@ -10,8 +10,8 @@ export type OpportunityCombined = {
   updated_at: number;
   source_block_timestamp?: number | null;
   execute_block_timestamp?: number | null; // New field for execute block time
-  received_at?: string | null; // ISO 8601
-  send_at?: string | null; // ISO 8601
+  received_at?: number | null; // Timestamp in ms
+  send_at?: number | null; // Timestamp in ms
   // Tx/blocks
   source_tx?: string | null;
   source_block_number?: number | null;
@@ -67,10 +67,10 @@ function iso(v?: number | null) {
   }
 }
 
-function formatISODate(isoString?: string | null) {
-  if (!isoString) return "N/A";
+function formatISODate(timestamp?: number | null) {
+  if (!timestamp && timestamp !== 0) return "N/A";
   try {
-    const date = new Date(isoString);
+    const date = new Date(timestamp!);
     const formatted = date.toLocaleString("en-US", {
       year: "numeric",
       month: "2-digit",

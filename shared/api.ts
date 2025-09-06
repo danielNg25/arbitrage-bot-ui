@@ -145,8 +145,8 @@ export interface OpportunityDetails {
   estimate_profit?: string | null; // raw token units
   estimate_profit_usd?: number | null;
   path?: string[];
-  received_at?: string | null;
-  send_at?: string | null;
+  received_at?: number | null;
+  send_at?: number | null;
   simulation_time?: number | null;
   error?: string | null;
   gas_amount?: number | null;

@@ -422,8 +422,15 @@ export default function DebugInsights() {
         toAddress = txDetails.to;
       }
 
+      // Set timestamps to null for the debug server since they're not required
+      const opportunityForDebug = {
+        ...detail,
+        received_at: null,
+        send_at: null,
+      };
+
       const requestBody = {
-        opportunity: detail,
+        opportunity: opportunityForDebug,
         block_number: detail.source_block_number?.toString() || "latest",
         from_address: fromAddress,
         to: toAddress,
