@@ -144,9 +144,6 @@ export default function OpportunityTable({
               <th className="px-4 py-3 text-left font-semibold">Network</th>
               <th className="px-4 py-3 text-left font-semibold">Status</th>
               <th className="px-4 py-3 text-left font-semibold">Token</th>
-              <th className="px-4 py-3 text-left font-semibold">
-                Estimated Revenue (USD)
-              </th>
               <th className="px-4 py-3 text-left">
                 <button
                   type="button"
@@ -156,6 +153,9 @@ export default function OpportunityTable({
                   Net Profit (USD)
                   <SortIcon active={sortKey === "profit_usd"} dir={sortDir} />
                 </button>
+              </th>
+              <th className="px-4 py-3 text-left font-semibold">
+                Estimated Revenue (USD)
               </th>
               <th className="px-4 py-3 text-left font-semibold">
                 Source Block
@@ -231,14 +231,14 @@ export default function OpportunityTable({
                     </div>
                   </td>
                   <td className="px-4 py-3 align-top font-mono tabular-nums">
-                    {r.estimate_profit_usd == null
-                      ? "N/A"
-                      : formatCurrencyWithPrecision(r.estimate_profit_usd)}
-                  </td>
-                  <td className="px-4 py-3 align-top font-mono tabular-nums">
                     {r.profit_usd == null || r.gas_usd == null
                       ? "N/A"
                       : formatCurrencyWithPrecision(r.profit_usd - r.gas_usd)}
+                  </td>
+                  <td className="px-4 py-3 align-top font-mono tabular-nums">
+                    {r.estimate_profit_usd == null
+                      ? "N/A"
+                      : formatCurrencyWithPrecision(r.estimate_profit_usd)}
                   </td>
                   <td className="px-4 py-3 align-top font-mono tabular-nums">
                     {r.source_block_number || "N/A"}

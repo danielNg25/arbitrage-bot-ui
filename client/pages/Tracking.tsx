@@ -621,11 +621,13 @@ export default function Tracking() {
 
   return (
     <section aria-label="Opportunity Tracking" className="space-y-3">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h2 className="text-lg font-semibold tracking-tight">
           Opportunity Tracking
         </h2>
-        <div className="flex items-center gap-4">
+
+        {/* Desktop: Full controls */}
+        <div className="hidden sm:flex items-center gap-4">
           <div className="flex items-center gap-2">
             <Label
               htmlFor="rt-toggle"
@@ -668,6 +670,21 @@ export default function Tracking() {
           </div>
           <div className="flex flex-col items-end gap-1 text-sm text-muted-foreground">
             <div>Current Time: {currentTime.toLocaleString()}</div>
+            {lastUpdated && (
+              <div>Last Updated: {lastUpdated.toLocaleString()}</div>
+            )}
+          </div>
+          <button
+            onClick={fetchOpportunities}
+            className="px-3 py-1.5 text-xs bg-primary/10 hover:bg-primary/20 text-primary rounded-md transition-colors"
+          >
+            Refresh
+          </button>
+        </div>
+
+        {/* Mobile: Simplified controls */}
+        <div className="flex sm:hidden items-center justify-between gap-3">
+          <div className="flex flex-col gap-1 text-sm text-muted-foreground">
             {lastUpdated && (
               <div>Last Updated: {lastUpdated.toLocaleString()}</div>
             )}
