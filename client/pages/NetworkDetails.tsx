@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { useNetworkVisibility } from "@/context/NetworkVisibilityContext";
 import {
   ProfitChart,
   type SeriesPoint,
@@ -44,6 +45,7 @@ const currency = new Intl.NumberFormat("en-US", {
 export default function NetworkDetails() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { showNetworkInfo } = useNetworkVisibility();
   const [period, setPeriod] = useState<"hourly" | "daily" | "monthly">(
     "hourly",
   );
@@ -134,8 +136,10 @@ export default function NetworkDetails() {
     <section aria-label="Network Details" className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold tracking-tight">
-          {`Network: ${name}`}{" "}
-          <span className="text-xs text-muted-foreground">(ID {id})</span>
+          {showNetworkInfo ? `Network: ${name}` : "Details"}{" "}
+          {showNetworkInfo && (
+            <span className="text-xs text-muted-foreground">(ID {id})</span>
+          )}
         </h2>
         <div className="flex gap-2">
           <Button variant="outline" onClick={() => navigate("/")}>

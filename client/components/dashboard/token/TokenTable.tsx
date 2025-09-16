@@ -1,4 +1,5 @@
 import React from "react";
+import { useNetworkVisibility } from "@/context/NetworkVisibilityContext";
 
 export type TokenRow = {
   name: string | null;
@@ -39,6 +40,7 @@ function getTokenUrl(
 }
 
 export default function TokenTable({ rows }: { rows: TokenRow[] }) {
+  const { showNetworkInfo } = useNetworkVisibility();
   return (
     <div className="rounded-md border-2 border-border/60 bg-card shadow-md">
       <div className="overflow-x-auto">
@@ -62,12 +64,16 @@ export default function TokenTable({ rows }: { rows: TokenRow[] }) {
                 className="border-t border-border/60 hover:bg-accent/10"
               >
                 <td className="px-4 py-3 align-top">
-                  {r.network_name.charAt(0).toUpperCase() +
-                    r.network_name.slice(1)}
+                  {showNetworkInfo
+                    ? r.network_name.charAt(0).toUpperCase() +
+                      r.network_name.slice(1)
+                    : "****"}
                 </td>
-                <td className="px-4 py-3 align-top">{r.name ?? "Unknown"}</td>
+                <td className="px-4 py-3 align-top">
+                  {showNetworkInfo ? (r.name ?? "Unknown") : "****"}
+                </td>
                 <td className="px-4 py-3 align-top font-mono">
-                  {r.symbol ?? "N/A"}
+                  {showNetworkInfo ? (r.symbol ?? "N/A") : "****"}
                 </td>
                 <td className="px-4 py-3 align-top font-mono tabular-nums">
                   {currency.format(r.total_profit_usd)}
@@ -76,22 +82,27 @@ export default function TokenTable({ rows }: { rows: TokenRow[] }) {
                   {r.price == null ? "N/A" : currency.format(r.price)}
                 </td>
                 <td className="px-4 py-3 align-top font-mono">
-                  {(() => {
-                    const tokenUrl = getTokenUrl(r.block_explorer, r.address);
-                    if (tokenUrl) {
-                      return (
-                        <a
-                          href={tokenUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-primary hover:text-primary/80 hover:underline transition-colors"
-                        >
-                          {shorten(r.address)}
-                        </a>
-                      );
-                    }
-                    return shorten(r.address);
-                  })()}
+                  {showNetworkInfo
+                    ? (() => {
+                        const tokenUrl = getTokenUrl(
+                          r.block_explorer,
+                          r.address,
+                        );
+                        if (tokenUrl) {
+                          return (
+                            <a
+                              href={tokenUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-primary hover:text-primary/80 hover:underline transition-colors"
+                            >
+                              {shorten(r.address)}
+                            </a>
+                          );
+                        }
+                        return shorten(r.address);
+                      })()
+                    : "****"}
                 </td>
               </tr>
             ))}

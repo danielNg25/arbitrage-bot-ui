@@ -1,4 +1,5 @@
 import React from "react";
+import { useNetworkVisibility } from "@/context/NetworkVisibilityContext";
 
 // Merged detail type used by the UI (combines old OpportunityDetail + OpportunityDebug)
 export type OpportunityCombined = {
@@ -174,6 +175,7 @@ export default function DebugDetails({
   profitTokenDecimals?: number | null;
   blockExplorer?: string | null;
 }) {
+  const { showNetworkInfo } = useNetworkVisibility();
   const base = (blockExplorer || explorerBase(detail.network_id))?.replace(
     /\/$/,
     "",
@@ -237,7 +239,9 @@ export default function DebugDetails({
         {kv("ID", detail.id ?? "N/A")}
         {kv(
           "Network",
-          `${networkName ? networkName.charAt(0).toUpperCase() + networkName.slice(1) : ""} (${detail.network_id})`,
+          showNetworkInfo
+            ? `${networkName ? networkName.charAt(0).toUpperCase() + networkName.slice(1) : ""} (${detail.network_id})`
+            : "****",
         )}
         {kv(
           "Status",
@@ -260,61 +264,73 @@ export default function DebugDetails({
           )}
         {kv(
           "Profit Token",
-          <span>
-            {tokenLabel(detail.profit_token)} (
-            <LinkAddr addr={detail.profit_token} base={base} kind="token" />)
-          </span>,
+          showNetworkInfo ? (
+            <span>
+              {tokenLabel(detail.profit_token)} (
+              <LinkAddr addr={detail.profit_token} base={base} kind="token" />)
+            </span>
+          ) : (
+            "****"
+          ),
         )}
         {kv(
           "Source Pool",
-          detail.path && detail.path.length >= 3 ? (
-            <span>
-              {tokenLabel(detail.path[0])} - {tokenLabel(detail.path[2])} (
-              <LinkAddr
-                addr={detail.source_pool ?? detail.path[1] ?? null}
-                base={base}
-                kind="address"
-              />
-              )
-            </span>
+          showNetworkInfo ? (
+            detail.path && detail.path.length >= 3 ? (
+              <span>
+                {tokenLabel(detail.path[0])} - {tokenLabel(detail.path[2])} (
+                <LinkAddr
+                  addr={detail.source_pool ?? detail.path[1] ?? null}
+                  base={base}
+                  kind="address"
+                />
+                )
+              </span>
+            ) : (
+              <span>
+                <LinkAddr
+                  addr={detail.source_pool ?? null}
+                  base={base}
+                  kind="address"
+                />
+              </span>
+            )
           ) : (
-            <span>
-              <LinkAddr
-                addr={detail.source_pool ?? null}
-                base={base}
-                kind="address"
-              />
-            </span>
+            "****"
           ),
         )}
         {kv(
           "Path",
-          detail.path && detail.path.length ? (
-            <div className="flex w-full flex-wrap items-center gap-2">
-              {detail.path.map((p, i) => (
-                <React.Fragment key={i}>
-                  <a
-                    href={`${base}/${i % 2 === 0 ? "token" : "address"}/${p}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={badgeClasses(i % 2 === 0 ? "token" : "pool")}
-                  >
-                    {i % 2 === 0 ? tokenLabel(p) : shorten(p)}
-                  </a>
-                  {i < detail.path!.length - 1 && (
-                    <svg
-                      className="h-4 w-4 text-muted-foreground"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
+          showNetworkInfo ? (
+            detail.path && detail.path.length ? (
+              <div className="flex w-full flex-wrap items-center gap-2">
+                {detail.path.map((p, i) => (
+                  <React.Fragment key={i}>
+                    <a
+                      href={`${base}/${i % 2 === 0 ? "token" : "address"}/${p}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={badgeClasses(i % 2 === 0 ? "token" : "pool")}
                     >
-                      <path d="M7 5l5 5-5 5" />
-                    </svg>
-                  )}
-                </React.Fragment>
-              ))}
-            </div>
+                      {i % 2 === 0 ? tokenLabel(p) : shorten(p)}
+                    </a>
+                    {i < detail.path!.length - 1 && (
+                      <svg
+                        className="h-4 w-4 text-muted-foreground"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path d="M7 5l5 5-5 5" />
+                      </svg>
+                    )}
+                  </React.Fragment>
+                ))}
+              </div>
+            ) : (
+              <span className="text-sm text-muted-foreground">N/A</span>
+            )
           ) : (
-            <span className="text-sm text-muted-foreground">N/A</span>
+            "****"
           ),
         )}
         {kv(
@@ -337,27 +353,37 @@ export default function DebugDetails({
         <Section title="Simulation">
           {kv(
             "Estimated Revenue",
-            detail.estimate_profit_token_amount ||
+            showNetworkInfo ? (
+              detail.estimate_profit_token_amount ||
               detail.estimate_profit_usd != null ? (
-              <span>
-                {detail.estimate_profit_token_amount ? (
-                  <span className="mr-1">
-                    {detail.estimate_profit_token_amount}
-                  </span>
-                ) : null}
-                {detail.estimate_profit_usd != null ? (
-                  <span className={profitColor(detail.estimate_profit_usd)}>
-                    ({fmtUSD.format(detail.estimate_profit_usd)})
-                  </span>
-                ) : null}
-              </span>
+                <span>
+                  {detail.estimate_profit_token_amount ? (
+                    <span className="mr-1">
+                      {detail.estimate_profit_token_amount}
+                    </span>
+                  ) : null}
+                  {detail.estimate_profit_usd != null ? (
+                    <span className={profitColor(detail.estimate_profit_usd)}>
+                      ({fmtUSD.format(detail.estimate_profit_usd)})
+                    </span>
+                  ) : null}
+                </span>
+              ) : (
+                "N/A"
+              )
+            ) : detail.estimate_profit_usd != null ? (
+              fmtUSD.format(detail.estimate_profit_usd)
             ) : (
-              "N/A"
+              "****"
             ),
           )}
           {kv(
             "Source Tx",
-            <LinkAddr addr={detail.source_tx ?? null} base={base} kind="tx" />,
+            showNetworkInfo ? (
+              <LinkAddr addr={detail.source_tx ?? null} base={base} kind="tx" />
+            ) : (
+              "****"
+            ),
           )}
           {kv("Source Tx Block", detail.source_block_number ?? "N/A")}
           {kv(
@@ -372,34 +398,50 @@ export default function DebugDetails({
           )}
           {kv(
             "Volume",
-            detail.amount
-              ? `${formatTokenAmount(detail.amount, profitTokenDecimals ?? 18)} ${tokenLabel(detail.profit_token)}`
-              : "N/A",
+            showNetworkInfo
+              ? detail.amount
+                ? `${formatTokenAmount(detail.amount, profitTokenDecimals ?? 18)} ${tokenLabel(detail.profit_token)}`
+                : "N/A"
+              : "****",
           )}
         </Section>
 
         <Section title="Execution">
           {kv(
             "Revenue",
-            detail.profit ||
+            showNetworkInfo ? (
+              detail.profit ||
               (detail.profit_usd != null && detail.gas_usd != null) ? (
-              <span>
-                {detail.profit ? (
-                  <span className="mr-1">{`${formatTokenAmount(detail.profit as string, profitTokenDecimals ?? 18)} ${tokenLabel(detail.profit_token)}`}</span>
-                ) : null}
-                {detail.profit_usd != null ? (
-                  <span className={profitColor(detail.profit_usd)}>
-                    ({fmtUSD.format(detail.profit_usd)})
-                  </span>
-                ) : null}
-              </span>
+                <span>
+                  {detail.profit ? (
+                    <span className="mr-1">{`${formatTokenAmount(detail.profit as string, profitTokenDecimals ?? 18)} ${tokenLabel(detail.profit_token)}`}</span>
+                  ) : null}
+                  {detail.profit_usd != null ? (
+                    <span className={profitColor(detail.profit_usd)}>
+                      ({fmtUSD.format(detail.profit_usd)})
+                    </span>
+                  ) : null}
+                </span>
+              ) : (
+                "N/A"
+              )
+            ) : detail.profit_usd != null ? (
+              fmtUSD.format(detail.profit_usd)
             ) : (
-              "N/A"
+              "****"
             ),
           )}
           {kv(
             "Executed Tx",
-            <LinkAddr addr={detail.execute_tx ?? null} base={base} kind="tx" />,
+            showNetworkInfo ? (
+              <LinkAddr
+                addr={detail.execute_tx ?? null}
+                base={base}
+                kind="tx"
+              />
+            ) : (
+              "****"
+            ),
           )}
           {kv("Execute Tx Block", detail.execute_block_number ?? "N/A")}
           {kv(

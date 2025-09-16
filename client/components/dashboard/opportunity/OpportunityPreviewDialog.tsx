@@ -13,6 +13,7 @@ import {
   Loader2,
   ExternalLink,
 } from "lucide-react";
+import { useNetworkVisibility } from "@/context/NetworkVisibilityContext";
 import DebugDetails, { type OpportunityCombined } from "./DebugDetails";
 import type { OpportunityRow } from "./OpportunityTable";
 
@@ -40,6 +41,7 @@ export default function OpportunityPreviewDialog({
   const [debugData, setDebugData] = useState<OpportunityCombined | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { showNetworkInfo } = useNetworkVisibility();
 
   // Get network data for the selected opportunity
   const networkData = selectedOpportunity
@@ -251,9 +253,13 @@ export default function OpportunityPreviewDialog({
           ) : debugData ? (
             <DebugDetails
               detail={debugData}
-              networkName={selectedOpportunity.network_name}
+              networkName={
+                showNetworkInfo ? selectedOpportunity.network_name : "****"
+              }
               profitTokenDecimals={18}
-              blockExplorer={networkData?.block_explorer}
+              blockExplorer={
+                showNetworkInfo ? networkData?.block_explorer : null
+              }
             />
           ) : (
             <div className="flex items-center justify-center py-8">

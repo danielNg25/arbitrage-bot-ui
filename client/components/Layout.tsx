@@ -1,10 +1,24 @@
 import React, { useState } from "react";
 import { NavLink, Outlet } from "react-router-dom";
 import ThemeToggle from "@/components/ThemeToggle";
+import NetworkVisibilityToggle from "@/components/NetworkVisibilityToggle";
+import {
+  NetworkVisibilityProvider,
+  useNetworkVisibility,
+} from "@/context/NetworkVisibilityContext";
 import { Menu, X } from "lucide-react";
 
 export default function Layout() {
+  return (
+    <NetworkVisibilityProvider>
+      <LayoutContent />
+    </NetworkVisibilityProvider>
+  );
+}
+
+function LayoutContent() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { showNetworkInfo, toggleNetworkVisibility } = useNetworkVisibility();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/40">
@@ -54,6 +68,10 @@ export default function Layout() {
                 <Menu className="h-5 w-5" />
               )}
             </button>
+            <NetworkVisibilityToggle
+              visible={showNetworkInfo}
+              onToggle={toggleNetworkVisibility}
+            />
             <ThemeToggle />
           </div>
         </div>

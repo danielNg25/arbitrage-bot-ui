@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useNetworkVisibility } from "@/context/NetworkVisibilityContext";
 import TokenTable, {
   type TokenRow,
 } from "@/components/dashboard/token/TokenTable";
@@ -24,6 +25,8 @@ function dummyNetworks(): Network[] {
       created_at: Math.floor(Date.now() / 1000),
       executed_opportunities: 0,
       success_rate: null,
+      router_address: null,
+      executors: [],
     },
     {
       chain_id: 137,
@@ -39,6 +42,8 @@ function dummyNetworks(): Network[] {
       created_at: Math.floor(Date.now() / 1000),
       executed_opportunities: 0,
       success_rate: null,
+      router_address: null,
+      executors: [],
     },
     {
       chain_id: 56,
@@ -54,6 +59,8 @@ function dummyNetworks(): Network[] {
       created_at: Math.floor(Date.now() / 1000),
       executed_opportunities: 0,
       success_rate: null,
+      router_address: null,
+      executors: [],
     },
   ];
 }
@@ -90,6 +97,7 @@ function buildDummyTokens(nets: Network[], count = 20): TokenRow[] {
 }
 
 export default function TokenPerformance() {
+  const { showNetworkInfo } = useNetworkVisibility();
   const [networks, setNetworks] = useState<Network[]>([]);
   const [tokens, setTokens] = useState<TokenRow[]>([]);
   const [loading, setLoading] = useState(false);
@@ -164,7 +172,8 @@ export default function TokenPerformance() {
   }, [sorted, page]);
 
   const chartData: TokenDatum[] = useMemo(() => {
-    return sorted.map((t) => ({
+    // Take only top 10 tokens by profit
+    return sorted.slice(0, 10).map((t) => ({
       label: t.symbol ?? `${t.address.slice(0, 6)}…${t.address.slice(-4)}`,
       value: t.total_profit_usd,
     }));
@@ -193,7 +202,9 @@ export default function TokenPerformance() {
               <option value="all">All Chains</option>
               {networks.map((n) => (
                 <option key={n.chain_id} value={n.chain_id}>
-                  {n.name} ({n.chain_id})
+                  {showNetworkInfo
+                    ? `${n.name} (${n.chain_id})`
+                    : `Chain ID: ****`}
                 </option>
               ))}
             </select>

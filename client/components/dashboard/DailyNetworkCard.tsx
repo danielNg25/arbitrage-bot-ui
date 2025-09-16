@@ -2,6 +2,7 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useNetworkVisibility } from "@/context/NetworkVisibilityContext";
 import type { TimeAggregationResponse } from "@shared/api";
 
 const currency = new Intl.NumberFormat("en-US", {
@@ -79,6 +80,7 @@ export function DailyNetworkCard({
   className?: string;
 }) {
   const navigate = useNavigate();
+  const { showNetworkInfo } = useNetworkVisibility();
   const successCount = aggregation.successful_opportunities;
   const failedCount = aggregation.failed_opportunities;
   const executedCount = aggregation.executed_opportunities;
@@ -94,10 +96,10 @@ export function DailyNetworkCard({
       <div className="flex items-start justify-between p-6 border-b border-border/60">
         <div>
           <h3 className="text-lg font-semibold tracking-tight capitalize">
-            {aggregation.network_name}
+            {showNetworkInfo ? aggregation.network_name : "****"}
           </h3>
           <p className="mt-0.5 text-sm text-muted-foreground">
-            Chain ID: {aggregation.network_id} •{" "}
+            {showNetworkInfo ? `Chain ID: ${aggregation.network_id} • ` : ""}
             {formatDate(aggregation.timestamp)}
           </p>
           <p className="mt-1 text-xs text-muted-foreground">

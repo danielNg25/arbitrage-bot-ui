@@ -15,6 +15,7 @@ import FilterControls, {
 } from "@/components/dashboard/opportunity/FilterControls";
 import Pagination from "@/components/dashboard/opportunity/Pagination";
 import OpportunityPreviewDialog from "@/components/dashboard/opportunity/OpportunityPreviewDialog";
+import { useNetworkVisibility } from "@/context/NetworkVisibilityContext";
 import type { Network, OpportunityResponse, PaginationInfo } from "@shared/api";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -129,6 +130,7 @@ function buildDummyOpps(nets: Network[], count = 50): OpportunityResponse[] {
 export default function Tracking() {
   const [networks, setNetworks] = useState<Network[]>([]);
   const [networksLoading, setNetworksLoading] = useState(true);
+  const { showNetworkInfo } = useNetworkVisibility();
   const [realtimeEnabled, setRealtimeEnabled] = useState(false);
   const [status, setStatus] = useState<StatusFilter>("Profitable");
   const [networkId, setNetworkId] = useState<number | "all">("all");

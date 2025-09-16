@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { useNetworkVisibility } from "@/context/NetworkVisibilityContext";
 import DebugDetails, {
   type OpportunityCombined,
 } from "@/components/dashboard/opportunity/DebugDetails";
@@ -108,6 +109,7 @@ function dummyCombined(): OpportunityCombined {
 export default function DebugInsights() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { showNetworkInfo } = useNetworkVisibility();
   const [detail, setDetail] = useState<OpportunityCombined | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -756,7 +758,9 @@ export default function DebugInsights() {
     <section aria-label="Debug Insights" className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold tracking-tight">
-          Opportunity Debug Insights
+          {showNetworkInfo
+            ? `Opportunity Debug Insights${networkName ? ` - ${networkName}` : ""}`
+            : "Opportunity Debug Insights"}
         </h2>
         <div className="flex gap-2">
           <Button variant="outline" onClick={() => navigate("/opportunities")}>
@@ -831,10 +835,10 @@ export default function DebugInsights() {
 
           <DebugDetails
             detail={detail}
-            networkName={networkName}
-            tokenMeta={tokenMeta}
+            networkName={showNetworkInfo ? networkName : "****"}
+            tokenMeta={showNetworkInfo ? tokenMeta : {}}
             profitTokenDecimals={profitTokenDecimals ?? 18}
-            blockExplorer={blockExplorer}
+            blockExplorer={showNetworkInfo ? blockExplorer : null}
           />
         </>
       ) : (

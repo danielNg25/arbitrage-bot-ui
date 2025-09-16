@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { ArrowUpDown, ArrowDown, ArrowUp, Eye } from "lucide-react";
 import { getStatusDisplayName } from "@shared/api";
 import { Button } from "@/components/ui/button";
+import { useNetworkVisibility } from "@/context/NetworkVisibilityContext";
 
 export type OpportunityRow = {
   id?: string;
@@ -113,6 +114,7 @@ export default function OpportunityTable({
   onPreviewClick?: (row: OpportunityRow) => void;
   highlight?: Record<string, boolean>;
 }) {
+  const { showNetworkInfo } = useNetworkVisibility();
   const getKey = (r: OpportunityRow) =>
     r.id ?? `${r.network_id}-${r.created_at}`;
 
@@ -197,13 +199,15 @@ export default function OpportunityTable({
                         <div className="w-2 h-2 rounded-full bg-primary/60"></div>
                         <div>
                           <div className="font-medium">
-                            {r.network_name
-                              ? r.network_name.charAt(0).toUpperCase() +
-                                r.network_name.slice(1)
-                              : ""}
+                            {showNetworkInfo
+                              ? r.network_name
+                                ? r.network_name.charAt(0).toUpperCase() +
+                                  r.network_name.slice(1)
+                                : ""
+                              : "****"}
                           </div>
                           <div className="text-xs text-muted-foreground">
-                            ID: {r.network_id}
+                            {showNetworkInfo ? `ID: ${r.network_id}` : "****"}
                           </div>
                         </div>
                       </div>
@@ -215,9 +219,11 @@ export default function OpportunityTable({
                   <td className="px-4 py-3 align-top">
                     <div>
                       <div className="font-medium">
-                        {r.profit_token_symbol || "N/A"}
+                        {showNetworkInfo
+                          ? r.profit_token_symbol || "N/A"
+                          : "****"}
                       </div>
-                      {!r.profit_token_symbol && (
+                      {!r.profit_token_symbol && showNetworkInfo && (
                         <div className="text-xs text-muted-foreground font-mono">
                           {shorten(r.profit_token)}
                         </div>
