@@ -13,7 +13,14 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { ChevronDown, ChevronUp, Calendar, MoreHorizontal } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronUp,
+  Calendar,
+  MoreHorizontal,
+  Plus,
+  Minus,
+} from "lucide-react";
 
 export type StatusFilter = "all" | OpportunityStatus | "Profitable";
 
@@ -53,6 +60,8 @@ export default function FilterControls({
   onClear: () => void;
   onApply: () => void;
 }) {
+  const [showProfitMax, setShowProfitMax] = useState(false);
+  const [showEstimateMax, setShowEstimateMax] = useState(false);
   const allStatuses: OpportunityStatus[] = [
     "Succeeded",
     "PartiallySucceeded",
@@ -100,11 +109,11 @@ export default function FilterControls({
   };
 
   return (
-    <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
-      <div className="flex flex-col">
+    <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:flex-wrap">
+      <div className="flex flex-col min-w-0">
         <label className="mb-1 text-xs text-muted-foreground">Status</label>
         <Select value={status} onValueChange={handleStatusChange}>
-          <SelectTrigger className="w-48">
+          <SelectTrigger className="w-full sm:w-48">
             <SelectValue placeholder="Select status" />
           </SelectTrigger>
           <SelectContent>
@@ -120,10 +129,10 @@ export default function FilterControls({
           </SelectContent>
         </Select>
       </div>
-      <div className="flex flex-col">
+      <div className="flex flex-col min-w-0">
         <label className="mb-1 text-xs text-muted-foreground">Network</label>
         <select
-          className="h-10 rounded-md border-2 border-border/60 bg-background px-3 text-sm"
+          className="h-10 w-full sm:w-48 rounded-md border-2 border-border/60 bg-background px-3 text-sm"
           value={networkId}
           onChange={(e) =>
             onChange({
@@ -140,16 +149,16 @@ export default function FilterControls({
           ))}
         </select>
       </div>
-      <div className="flex flex-col">
+      <div className="flex flex-col min-w-0">
         <label className="mb-1 text-xs text-muted-foreground">
           Net Profit (USD)
         </label>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <input
             type="number"
             inputMode="decimal"
             placeholder="Min"
-            className="h-10 w-28 rounded-md border-2 border-border/60 bg-background px-3 text-sm"
+            className="h-10 w-24 sm:w-28 rounded-md border-2 border-border/60 bg-background px-3 text-sm"
             value={profitMin}
             onChange={(e) =>
               onChange({
@@ -157,31 +166,50 @@ export default function FilterControls({
               })
             }
           />
-          <span className="text-xs text-muted-foreground">to</span>
-          <input
-            type="number"
-            inputMode="decimal"
-            placeholder="Max"
-            className="h-10 w-28 rounded-md border-2 border-border/60 bg-background px-3 text-sm"
-            value={profitMax}
-            onChange={(e) =>
-              onChange({
-                profitMax: e.target.value === "" ? "" : Number(e.target.value),
-              })
-            }
-          />
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowProfitMax(!showProfitMax)}
+            className="h-10 w-8 p-0 hover:bg-accent flex items-center justify-center"
+            aria-label={showProfitMax ? "Hide max field" : "Show max field"}
+          >
+            {showProfitMax ? (
+              <Minus className="h-4 w-4" />
+            ) : (
+              <Plus className="h-4 w-4" />
+            )}
+          </Button>
+          {showProfitMax && (
+            <>
+              <span className="text-xs text-muted-foreground">to</span>
+              <input
+                type="number"
+                inputMode="decimal"
+                placeholder="Max"
+                className="h-10 w-24 sm:w-28 rounded-md border-2 border-border/60 bg-background px-3 text-sm"
+                value={profitMax}
+                onChange={(e) =>
+                  onChange({
+                    profitMax:
+                      e.target.value === "" ? "" : Number(e.target.value),
+                  })
+                }
+              />
+            </>
+          )}
         </div>
       </div>
-      <div className="flex flex-col">
+      <div className="flex flex-col min-w-0">
         <label className="mb-1 text-xs text-muted-foreground">
           Estimated Profit (USD)
         </label>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <input
             type="number"
             inputMode="decimal"
             placeholder="Min"
-            className="h-10 w-28 rounded-md border-2 border-border/60 bg-background px-3 text-sm"
+            className="h-10 w-24 sm:w-28 rounded-md border-2 border-border/60 bg-background px-3 text-sm"
             value={estimateProfitMin}
             onChange={(e) =>
               onChange({
@@ -190,20 +218,38 @@ export default function FilterControls({
               })
             }
           />
-          <span className="text-xs text-muted-foreground">to</span>
-          <input
-            type="number"
-            inputMode="decimal"
-            placeholder="Max"
-            className="h-10 w-28 rounded-md border-2 border-border/60 bg-background px-3 text-sm"
-            value={estimateProfitMax}
-            onChange={(e) =>
-              onChange({
-                estimateProfitMax:
-                  e.target.value === "" ? "" : Number(e.target.value),
-              })
-            }
-          />
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowEstimateMax(!showEstimateMax)}
+            className="h-10 w-8 p-0 hover:bg-accent flex items-center justify-center"
+            aria-label={showEstimateMax ? "Hide max field" : "Show max field"}
+          >
+            {showEstimateMax ? (
+              <Minus className="h-4 w-4" />
+            ) : (
+              <Plus className="h-4 w-4" />
+            )}
+          </Button>
+          {showEstimateMax && (
+            <>
+              <span className="text-xs text-muted-foreground">to</span>
+              <input
+                type="number"
+                inputMode="decimal"
+                placeholder="Max"
+                className="h-10 w-24 sm:w-28 rounded-md border-2 border-border/60 bg-background px-3 text-sm"
+                value={estimateProfitMax}
+                onChange={(e) =>
+                  onChange({
+                    estimateProfitMax:
+                      e.target.value === "" ? "" : Number(e.target.value),
+                  })
+                }
+              />
+            </>
+          )}
         </div>
       </div>
       <Popover>
@@ -290,11 +336,20 @@ export default function FilterControls({
           </div>
         </PopoverContent>
       </Popover>
-      <div className="flex gap-2">
-        <Button type="button" variant="outline" onClick={onClear}>
+      <div className="flex gap-2 flex-wrap">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => {
+            onClear();
+            setShowProfitMax(false);
+            setShowEstimateMax(false);
+          }}
+          className="flex-shrink-0"
+        >
           Clear Filters
         </Button>
-        <Button type="button" onClick={onApply}>
+        <Button type="button" onClick={onApply} className="flex-shrink-0">
           Apply Filters
         </Button>
       </div>

@@ -680,7 +680,7 @@ export default function Tracking() {
           </button>
         </div>
       </div>
-      <div className="rounded-md border-2 border-border/60 bg-card p-4 shadow-md">
+      <div className="rounded-md border-2 border-border/60 bg-card p-4 shadow-md overflow-hidden">
         <FilterControls
           status={status}
           networkId={networkId}

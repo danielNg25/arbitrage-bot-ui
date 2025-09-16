@@ -104,7 +104,7 @@ export default function TokenProfitChart({
               key={i}
               x={8}
               y={24 + (1 - t) * (480 - 24 - 48) + 4}
-              fontSize="12"
+              fontSize="20"
               fontWeight="500"
               fill="hsl(var(--muted-foreground))"
             >
@@ -117,7 +117,7 @@ export default function TokenProfitChart({
               key={i}
               x={l.x}
               y={468}
-              fontSize="12"
+              fontSize="20"
               fontWeight="500"
               textAnchor="middle"
               fill="hsl(var(--muted-foreground))"
