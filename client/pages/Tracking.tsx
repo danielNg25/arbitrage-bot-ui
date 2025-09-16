@@ -345,6 +345,7 @@ export default function Tracking() {
         estimate_profit_usd: opp.estimate_profit_usd, // Add estimated profit
         created_at: Math.floor(new Date(opp.created_at).getTime() / 1000),
         source_block_number: opp.source_block_number, // Add source block number
+        execute_block_number: (opp as any).execute_block_number ?? null,
       };
     });
 

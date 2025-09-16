@@ -36,7 +36,8 @@ export default function Pagination({
   return (
     <div className="flex items-center justify-between gap-3">
       <div className="flex items-center gap-4">
-        <div className="text-xs text-muted-foreground">
+        {/* Desktop: Show page info */}
+        <div className="hidden sm:block text-xs text-muted-foreground">
           Page {page + 1} of {totalPages} • {total} items
         </div>
         <div className="flex items-center gap-2">
@@ -71,7 +72,7 @@ export default function Pagination({
         {/* Direct Page Input */}
         {onDirectPageChange && currentPage && (
           <div className="flex items-center gap-1 text-xs">
-            <span className="text-muted-foreground">Page</span>
+            <span className="hidden sm:inline text-muted-foreground">Page</span>
             <input
               type="number"
               min="1"

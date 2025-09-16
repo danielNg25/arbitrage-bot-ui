@@ -3,9 +3,6 @@ import { useNetworkVisibility } from "@/context/NetworkVisibilityContext";
 import TokenTable, {
   type TokenRow,
 } from "@/components/dashboard/token/TokenTable";
-import TokenProfitChart, {
-  type TokenDatum,
-} from "@/components/dashboard/token/TokenProfitChart";
 import Pagination from "@/components/dashboard/opportunity/Pagination";
 import type { Network } from "@shared/api";
 
@@ -171,14 +168,6 @@ export default function TokenPerformance() {
     return sorted.slice(start, start + pageSize);
   }, [sorted, page]);
 
-  const chartData: TokenDatum[] = useMemo(() => {
-    // Take only top 10 tokens by profit
-    return sorted.slice(0, 10).map((t) => ({
-      label: t.symbol ?? `${t.address.slice(0, 6)}…${t.address.slice(-4)}`,
-      value: t.total_profit_usd,
-    }));
-  }, [sorted]);
-
   return (
     <section aria-label="Token Performance" className="space-y-3">
       <h2 className="text-lg font-semibold tracking-tight">
@@ -220,10 +209,6 @@ export default function TokenPerformance() {
         </div>
       ) : (
         <>
-          <TokenProfitChart
-            title="Profit Contribution by Token"
-            data={chartData}
-          />
           <TokenTable rows={paged} />
           <div className="pt-3">
             <Pagination

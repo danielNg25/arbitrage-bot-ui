@@ -16,6 +16,7 @@ export type OpportunityRow = {
   estimate_profit_usd: number | null; // Estimated profit before execution
   created_at: number; // Unix timestamp for sorting
   source_block_number: number | null; // Add source block number
+  execute_block_number: number | null; // Executed block number
 };
 
 export type SortKey = "profit_usd" | "created_at";
@@ -150,16 +151,14 @@ export default function OpportunityTable({
                   onClick={() => onSortChange("profit_usd")}
                   className="inline-flex items-center gap-1 font-semibold hover:text-foreground"
                 >
-                  Net Profit (USD)
+                  Profit (USD)
                   <SortIcon active={sortKey === "profit_usd"} dir={sortDir} />
                 </button>
               </th>
               <th className="px-4 py-3 text-left font-semibold">
-                Estimated Revenue (USD)
+                Estimated (USD)
               </th>
-              <th className="px-4 py-3 text-left font-semibold">
-                Source Block
-              </th>
+              <th className="px-4 py-3 text-left font-semibold">Block Diff</th>
               <th className="px-4 py-3 text-left">
                 <button
                   type="button"
@@ -241,7 +240,10 @@ export default function OpportunityTable({
                       : formatCurrencyWithPrecision(r.estimate_profit_usd)}
                   </td>
                   <td className="px-4 py-3 align-top font-mono tabular-nums">
-                    {r.source_block_number || "N/A"}
+                    {r.execute_block_number == null ||
+                    r.source_block_number == null
+                      ? "--"
+                      : r.execute_block_number - r.source_block_number}
                   </td>
                   <td className="px-4 py-3 align-top">
                     {formatLocalTimestamp(r.created_at * 1000)}

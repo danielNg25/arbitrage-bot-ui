@@ -23,7 +23,7 @@ function LayoutContent() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/40">
       <header className="sticky top-0 z-10 border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container mx-auto flex items-center justify-between py-4 px-4 sm:px-6 lg:px-8">
+        <div className="container mx-auto flex items-center justify-between py-4 px-1 sm:px-6 lg:px-8">
           <div className="flex items-center gap-3">
             <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-cyan-400 to-blue-600" />
             <h1 className="text-xl font-bold tracking-tight">Dashboard</h1>
@@ -151,11 +151,11 @@ function LayoutContent() {
         </div>
       )}
 
-      <main className="container mx-auto space-y-6 py-6 px-4 sm:px-6 lg:px-8">
+      <main className="container mx-auto space-y-6 py-6 px-1 sm:px-6 lg:px-8">
         <Outlet />
       </main>
       <footer className="border-t py-6">
-        <div className="container mx-auto text-center text-xs text-muted-foreground px-4 sm:px-6 lg:px-8">
+        <div className="container mx-auto text-center text-xs text-muted-foreground px-1 sm:px-6 lg:px-8">
           Dashboard for ADaniel's Arbitrage Bot.
         </div>
       </footer>
