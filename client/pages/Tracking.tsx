@@ -5,6 +5,7 @@ import React, {
   useRef,
   useState,
 } from "react";
+import NetworkSidebar from "@/components/dashboard/NetworkSidebar";
 import OpportunityTable, {
   type OpportunityRow,
   type SortDir,
@@ -133,6 +134,10 @@ export default function Tracking() {
   const { showNetworkInfo } = useNetworkVisibility();
   const [realtimeEnabled, setRealtimeEnabled] = useState(false);
   const [status, setStatus] = useState<StatusFilter>("Profitable");
+  const [statusFilter, setStatusFilter] = useState<"all" | "profitable">("all");
+  const [profitSizeFilter, setProfitSizeFilter] = useState<"all" | "big">(
+    "all",
+  );
   const [networkId, setNetworkId] = useState<number | "all">("all");
   const [sortKey, setSortKey] = useState<SortKey>("created_at");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
@@ -621,7 +626,7 @@ export default function Tracking() {
   ]);
 
   return (
-    <section aria-label="Opportunity Tracking" className="space-y-3">
+    <section aria-label="Opportunity Tracking" className="space-y-2">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h2 className="text-lg font-semibold tracking-tight">
           Opportunity Tracking
@@ -698,119 +703,167 @@ export default function Tracking() {
           </button>
         </div>
       </div>
-      <div className="rounded-md border-2 border-border/60 bg-card p-4 shadow-md overflow-hidden">
-        <FilterControls
-          status={status}
-          networkId={networkId}
-          networks={networks.map((n) => ({
-            chain_id: n.chain_id,
-            name: n.name,
-          }))}
-          profitMin={profitMin}
-          profitMax={profitMax}
-          estimateProfitMin={estimateProfitMin}
-          estimateProfitMax={estimateProfitMax}
-          timestampFrom={timestampFrom}
-          timestampTo={timestampTo}
-          onChange={(v) => {
-            if (v.status) setStatus(v.status);
-            if (typeof v.networkId !== "undefined") setNetworkId(v.networkId);
-            if (typeof v.profitMin !== "undefined") setProfitMin(v.profitMin);
-            if (typeof v.profitMax !== "undefined") setProfitMax(v.profitMax);
-            if (typeof v.estimateProfitMin !== "undefined")
-              setEstimateProfitMin(v.estimateProfitMin);
-            if (typeof v.estimateProfitMax !== "undefined")
-              setEstimateProfitMax(v.estimateProfitMax);
-            if (typeof v.timestampFrom !== "undefined")
-              setTimestampFrom(v.timestampFrom);
-            if (typeof v.timestampTo !== "undefined")
-              setTimestampTo(v.timestampTo);
-          }}
-          onClear={() => {
-            setStatus("Profitable");
-            setNetworkId("all");
-            setProfitMin("");
-            setProfitMax("");
-            setEstimateProfitMin("");
-            setEstimateProfitMax("");
-            setTimestampFrom("");
-            setTimestampTo("");
 
-            // Also clear applied filters
-            setAppliedProfitMin("");
-            setAppliedProfitMax("");
-            setAppliedEstimateProfitMin("");
-            setAppliedEstimateProfitMax("");
-            setAppliedTimestampFrom("");
-            setAppliedTimestampTo("");
-
-            setPage(1);
-          }}
-          onApply={applyFilters}
-        />
-      </div>
-
-      {loading || networksLoading ? (
-        <div className="h-48 animate-pulse rounded-md border-2 border-border/60 bg-card" />
-      ) : paginationLoading ? (
-        <div className="h-48 animate-pulse rounded-md border-2 border-border/60 bg-card" />
-      ) : error ? (
-        <div className="rounded-md border border-destructive bg-destructive/10 px-4 py-3 text-sm text-destructive-foreground">
-          {error}
-        </div>
-      ) : (
-        <>
-          {networks.length > 0 && (
-            <OpportunityTable
-              rows={tableRows}
-              sortKey={sortKey}
-              sortDir={sortDir}
-              onSortChange={onSortChange}
-              highlight={highlight}
-              onRowClick={(r) => {
-                const rid = r.id || String(r.created_at);
-                console.log("Row clicked:", { rid });
-                console.log("Opening in new tab:", `/opportunities/${rid}`);
-                window.open(`/opportunities/${rid}`, "_blank");
+      <div className="md:flex md:gap-2">
+        <aside className="hidden md:block md:w-56 md:shrink-0">
+          <NetworkSidebar
+            networks={networks.map((n) => ({
+              chain_id: n.chain_id,
+              name: n.name,
+            }))}
+            selected={networkId}
+            onSelect={(id) => {
+              setNetworkId(id);
+              setPage(1); // Reset to first page when changing network
+            }}
+            statusFilter={statusFilter}
+            onStatusFilterChange={(newStatus) => {
+              setStatusFilter(newStatus);
+              // Only change the status filter, not the profit filter
+              if (newStatus === "profitable") {
+                if (status !== "Profitable") {
+                  setStatus("Profitable");
+                }
+              } else {
+                if (status === "Profitable") {
+                  setStatus("all");
+                }
+              }
+              setPage(1); // Reset to first page when changing filter
+            }}
+            profitSizeFilter={profitSizeFilter}
+            onProfitSizeFilterChange={(size) => {
+              setProfitSizeFilter(size);
+              if (size === "big") {
+                setAppliedEstimateProfitMin(2);
+                setEstimateProfitMin(2);
+              } else {
+                setAppliedEstimateProfitMin("");
+                setEstimateProfitMin("");
+              }
+              setPage(1); // Reset to first page when changing filter
+            }}
+          />
+        </aside>
+        <div className="md:flex-1 space-y-2">
+          <div className="rounded-md border border-border/60 bg-card p-2 shadow-sm overflow-hidden">
+            <FilterControls
+              status={status}
+              networkId={networkId}
+              networks={networks.map((n) => ({
+                chain_id: n.chain_id,
+                name: n.name,
+              }))}
+              profitMin={profitMin}
+              profitMax={profitMax}
+              estimateProfitMin={estimateProfitMin}
+              estimateProfitMax={estimateProfitMax}
+              timestampFrom={timestampFrom}
+              timestampTo={timestampTo}
+              onChange={(v) => {
+                if (v.status) setStatus(v.status);
+                if (typeof v.networkId !== "undefined")
+                  setNetworkId(v.networkId);
+                if (typeof v.profitMin !== "undefined")
+                  setProfitMin(v.profitMin);
+                if (typeof v.profitMax !== "undefined")
+                  setProfitMax(v.profitMax);
+                if (typeof v.estimateProfitMin !== "undefined")
+                  setEstimateProfitMin(v.estimateProfitMin);
+                if (typeof v.estimateProfitMax !== "undefined")
+                  setEstimateProfitMax(v.estimateProfitMax);
+                if (typeof v.timestampFrom !== "undefined")
+                  setTimestampFrom(v.timestampFrom);
+                if (typeof v.timestampTo !== "undefined")
+                  setTimestampTo(v.timestampTo);
               }}
-              onPreviewClick={handlePreviewClick}
+              onClear={() => {
+                setStatus("Profitable");
+                setNetworkId("all");
+                setProfitMin("");
+                setProfitMax("");
+                setEstimateProfitMin("");
+                setEstimateProfitMax("");
+                setTimestampFrom("");
+                setTimestampTo("");
+
+                // Also clear applied filters
+                setAppliedProfitMin("");
+                setAppliedProfitMax("");
+                setAppliedEstimateProfitMin("");
+                setAppliedEstimateProfitMax("");
+                setAppliedTimestampFrom("");
+                setAppliedTimestampTo("");
+
+                setPage(1);
+              }}
+              onApply={applyFilters}
             />
-          )}
-          {pagination && (
-            <div className="pt-3">
-              {paginationLoading && (
-                <div className="mb-2 text-center text-sm text-muted-foreground">
-                  Loading page {page}...
+          </div>
+
+          {loading || networksLoading ? (
+            <div className="h-48 animate-pulse rounded-md border-2 border-border/60 bg-card" />
+          ) : paginationLoading ? (
+            <div className="h-48 animate-pulse rounded-md border-2 border-border/60 bg-card" />
+          ) : error ? (
+            <div className="rounded-md border border-destructive bg-destructive/10 px-4 py-3 text-sm text-destructive-foreground">
+              {error}
+            </div>
+          ) : (
+            <>
+              {networks.length > 0 && (
+                <OpportunityTable
+                  rows={tableRows}
+                  sortKey={sortKey}
+                  sortDir={sortDir}
+                  onSortChange={onSortChange}
+                  highlight={highlight}
+                  onRowClick={(r) => {
+                    const rid = r.id || String(r.created_at);
+                    console.log("Row clicked:", { rid });
+                    console.log("Opening in new tab:", `/opportunities/${rid}`);
+                    window.open(`/opportunities/${rid}`, "_blank");
+                  }}
+                  onPreviewClick={handlePreviewClick}
+                />
+              )}
+              {pagination && (
+                <div className="pt-3">
+                  {paginationLoading && (
+                    <div className="mb-2 text-center text-sm text-muted-foreground">
+                      Loading page {page}...
+                    </div>
+                  )}
+                  <Pagination
+                    page={pagination.page - 1} // Use API pagination data
+                    pageSize={pagination.limit}
+                    total={pagination.total}
+                    onPageChange={onPageChange}
+                    onPageSizeChange={onPageSizeChange}
+                    currentPage={page}
+                    totalPages={pagination.total_pages || 1}
+                    onDirectPageChange={setPage}
+                  />
                 </div>
               )}
-              <Pagination
-                page={pagination.page - 1} // Use API pagination data
-                pageSize={pagination.limit}
-                total={pagination.total}
-                onPageChange={onPageChange}
-                onPageSizeChange={onPageSizeChange}
-                currentPage={page}
-                totalPages={pagination.total_pages || 1}
-                onDirectPageChange={setPage}
-              />
-            </div>
+            </>
           )}
-        </>
-      )}
 
-      {/* Preview Dialog */}
-      <OpportunityPreviewDialog
-        isOpen={previewOpen}
-        onClose={handleClosePreview}
-        selectedOpportunity={selectedOpportunity}
-        allOpportunities={tableRows}
-        onNavigateToOpportunity={handleNavigateToOpportunity}
-        networks={networks.map((n) => ({
-          chain_id: n.chain_id,
-          name: n.name,
-          block_explorer: n.block_explorer,
-        }))}
-      />
+          {/* Preview Dialog */}
+          <OpportunityPreviewDialog
+            isOpen={previewOpen}
+            onClose={handleClosePreview}
+            selectedOpportunity={selectedOpportunity}
+            allOpportunities={tableRows}
+            onNavigateToOpportunity={handleNavigateToOpportunity}
+            networks={networks.map((n) => ({
+              chain_id: n.chain_id,
+              name: n.name,
+              block_explorer: n.block_explorer,
+            }))}
+          />
+        </div>
+      </div>
     </section>
   );
 }
