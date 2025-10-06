@@ -31,17 +31,17 @@ export default function NetworkSidebar({
         <div className="grid grid-cols-2 gap-1">
           <button
             type="button"
-            onClick={() => onStatusFilterChange?.("all")}
-            className={`rounded-sm px-2 py-1 text-xs transition-colors hover:bg-accent/10 ${statusFilter === "all" ? "bg-accent/20 text-foreground" : "text-foreground"}`}
-          >
-            All
-          </button>
-          <button
-            type="button"
             onClick={() => onStatusFilterChange?.("profitable")}
             className={`rounded-sm px-2 py-1 text-xs transition-colors hover:bg-accent/10 ${statusFilter === "profitable" ? "bg-accent/20 text-foreground" : "text-foreground"}`}
           >
             Profitable
+          </button>
+          <button
+            type="button"
+            onClick={() => onStatusFilterChange?.("all")}
+            className={`rounded-sm px-2 py-1 text-xs transition-colors hover:bg-accent/10 ${statusFilter === "all" ? "bg-accent/20 text-foreground" : "text-foreground"}`}
+          >
+            All
           </button>
         </div>
       </div>
