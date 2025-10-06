@@ -5,7 +5,7 @@ export default function NetworkSidebar({
   networks,
   selected,
   onSelect,
-  statusFilter = "all",
+  statusFilter = "profitable",
   onStatusFilterChange,
   profitSizeFilter = "all",
   onProfitSizeFilterChange,

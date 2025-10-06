@@ -134,7 +134,9 @@ export default function Tracking() {
   const { showNetworkInfo } = useNetworkVisibility();
   const [realtimeEnabled, setRealtimeEnabled] = useState(false);
   const [status, setStatus] = useState<StatusFilter>("Profitable");
-  const [statusFilter, setStatusFilter] = useState<"all" | "profitable">("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | "profitable">(
+    "profitable",
+  );
   const [profitSizeFilter, setProfitSizeFilter] = useState<"all" | "big">(
     "all",
   );
@@ -304,6 +306,15 @@ export default function Tracking() {
     appliedTimestampTo,
     networks,
   ]);
+
+  // Set initial status based on statusFilter
+  useEffect(() => {
+    if (statusFilter === "profitable" && status !== "Profitable") {
+      setStatus("Profitable");
+    } else if (statusFilter === "all" && status === "Profitable") {
+      setStatus("all");
+    }
+  }, [statusFilter, status]);
 
   useEffect(() => {
     fetchOpportunities();
