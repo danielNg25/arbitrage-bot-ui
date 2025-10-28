@@ -307,14 +307,14 @@ export default function Tracking() {
     networks,
   ]);
 
-  // Set initial status based on statusFilter
+  // Set initial status based on statusFilter when component mounts
   useEffect(() => {
     if (statusFilter === "profitable" && status !== "Profitable") {
       setStatus("Profitable");
     } else if (statusFilter === "all" && status === "Profitable") {
       setStatus("all");
     }
-  }, [statusFilter, status]);
+  }, []); // Only run once on mount
 
   useEffect(() => {
     fetchOpportunities();
@@ -772,7 +772,21 @@ export default function Tracking() {
               timestampFrom={timestampFrom}
               timestampTo={timestampTo}
               onChange={(v) => {
-                if (v.status) setStatus(v.status);
+                if (v.status) {
+                  setStatus(v.status);
+                  // Sync the sidebar status filter with the dropdown
+                  if (
+                    v.status === "Profitable" &&
+                    statusFilter !== "profitable"
+                  ) {
+                    setStatusFilter("profitable");
+                  } else if (
+                    v.status !== "Profitable" &&
+                    statusFilter === "profitable"
+                  ) {
+                    setStatusFilter("all");
+                  }
+                }
                 if (typeof v.networkId !== "undefined")
                   setNetworkId(v.networkId);
                 if (typeof v.profitMin !== "undefined")
