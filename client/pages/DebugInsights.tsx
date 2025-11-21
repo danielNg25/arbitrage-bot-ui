@@ -448,10 +448,13 @@ export default function DebugInsights() {
       let lines: string[] = [];
       let revenue: string | null = null;
       // Use a default receiver address if the env variable is not set
-      const receiverAddress = (
+      const receiverAddresses = (
         import.meta.env.VITE_RECEIVER_ADDRESS ||
-        "0xF90E54B26866edBffedAaAC63587163c0305fff7"
-      ).toLowerCase();
+        "0xF90E54B26866edBffedAaAC63587163c0305fff7,0xb81a7244677f840536c3cfb99af1998213ef035d"
+      )
+        .toLowerCase()
+        .split(",")
+        .map((addr) => addr.toLowerCase());
 
       try {
         const json = JSON.parse(text);
@@ -466,15 +469,14 @@ export default function DebugInsights() {
           for (const line of traceLines) {
             const trimmed = line.trim();
             if (trimmed.includes("emit Transfer")) {
-              // Updated regex to handle optional spaces and scientific notation
+              // Updated regex to handle both named parameters (from/to/value) and positional parameters (param0/param1/param2)
               const match = trimmed.match(
-                /emit\s+Transfer\s*\(\s*param0:\s*(0x[a-fA-F0-9]{40})\s*,\s*param1:\s*(0x[a-fA-F0-9]{40})\s*,\s*param2:\s*(\d+)(?:\s*\[[\d.e-]+\])?\s*\)/,
+                /emit\s+Transfer\s*\(\s*(?:from|param0):\s*(0x[a-fA-F0-9]{40})\s*,\s*(?:to|param1):\s*(0x[a-fA-F0-9]{40})\s*,\s*(?:value|param2):\s*(\d+)(?:\s*\[[\d.e-]+\])?\s*\)/,
               );
               if (match) {
                 if (
                   match[2] &&
-                  receiverAddress &&
-                  match[2].toLowerCase() === receiverAddress
+                  receiverAddresses.includes(match[2].toLowerCase())
                 ) {
                   revenue = match[3]; // Extract the amount as revenue
                   break;
@@ -531,8 +533,7 @@ export default function DebugInsights() {
               if (match) {
                 if (
                   match[2] &&
-                  receiverAddress &&
-                  match[2].toLowerCase() === receiverAddress
+                  receiverAddresses.includes(match[2].toLowerCase())
                 ) {
                   revenue = match[3];
                   break;
@@ -569,8 +570,7 @@ export default function DebugInsights() {
             if (match) {
               if (
                 match[2] &&
-                receiverAddress &&
-                match[2].toLowerCase() === receiverAddress
+                receiverAddresses.includes(match[2].toLowerCase())
               ) {
                 revenue = match[3];
                 break;
@@ -674,6 +674,7 @@ export default function DebugInsights() {
           execute_tx: o.execute_tx ?? null,
           source_pool: o.source_pool ?? null,
           path: Array.isArray(o.path) ? o.path : [],
+          path_v3: Array.isArray(o.path_v3) ? o.path_v3 : [],
           profit_token: o.profit_token,
           profit_usd: typeof o.profit_usd === "number" ? o.profit_usd : null,
           gas_usd: typeof o.gas_usd === "number" ? o.gas_usd : null,

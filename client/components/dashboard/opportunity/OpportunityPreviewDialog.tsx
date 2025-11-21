@@ -145,6 +145,7 @@ export default function OpportunityPreviewDialog({
           execute_block_number: opportunityData.execute_block_number,
           source_pool: opportunityData.source_pool,
           path: opportunityData.path,
+          path_v3: opportunityData.path_v3,
           profit_token:
             opportunityData.profit_token || selectedOpportunity.profit_token,
           profit_usd: opportunityData.profit_usd,

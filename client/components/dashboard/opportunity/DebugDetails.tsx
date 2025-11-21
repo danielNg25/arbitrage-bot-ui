@@ -22,6 +22,7 @@ export type OpportunityCombined = {
   // Pool/Path
   source_pool?: string | null;
   path?: string[] | null;
+  path_v3?: string[] | null;
   // Token & amounts
   profit_token: string;
   profit_usd?: number | null;
@@ -301,37 +302,89 @@ export default function DebugDetails({
         )}
         {kv(
           "Path",
-          showNetworkInfo ? (
-            detail.path && detail.path.length ? (
-              <div className="flex w-full flex-wrap items-center gap-2">
-                {detail.path.map((p, i) => (
-                  <React.Fragment key={i}>
-                    <a
-                      href={`${base}/${i % 2 === 0 ? "token" : "address"}/${p}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={badgeClasses(i % 2 === 0 ? "token" : "pool")}
-                    >
-                      {i % 2 === 0 ? tokenLabel(p) : shorten(p)}
-                    </a>
-                    {i < detail.path!.length - 1 && (
-                      <svg
-                        className="h-4 w-4 text-muted-foreground"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                      >
-                        <path d="M7 5l5 5-5 5" />
-                      </svg>
-                    )}
-                  </React.Fragment>
-                ))}
-              </div>
-            ) : (
-              <span className="text-sm text-muted-foreground">N/A</span>
-            )
-          ) : (
-            "****"
-          ),
+          showNetworkInfo
+            ? // Extract path data in correct format
+              (() => {
+                // Format path data to consistent [token_in, pool] pairs
+                let pathData: string[] = [];
+                // Store pool types for v3 paths
+                let poolTypes: Record<number, string> = {};
+                let isV3Path = false;
+
+                if (detail.path_v3 && detail.path_v3.length) {
+                  isV3Path = true;
+                  // For path_v3, extract token_in, pool, and pool_type
+                  // path_v3 format is an array of objects, each with:
+                  // [token_in, pool, token_out, fee, pool_type, ...]
+                  for (let i = 0; i < detail.path_v3.length; i += 5) {
+                    if (i + 4 < detail.path_v3.length) {
+                      // Add token_in and pool in that order
+                      pathData.push(detail.path_v3[i]); // token_in
+                      pathData.push(detail.path_v3[i + 1]); // pool
+
+                      // Store pool type for this pool address
+                      const poolIndex = pathData.length - 1; // Index of the pool we just added
+                      const poolType = detail.path_v3[i + 4]; // pool_type
+                      poolTypes[poolIndex] = poolType;
+                    }
+                  }
+                } else if (detail.path && detail.path.length) {
+                  // Original path format is already [token_in, pool, ...]
+                  pathData = detail.path;
+                }
+
+                if (pathData.length > 0) {
+                  return (
+                    <div className="flex w-full flex-wrap items-center gap-2">
+                      {pathData.map((p, i) => (
+                        <React.Fragment key={i}>
+                          <a
+                            href={`${base}/${i % 2 === 0 ? "token" : "address"}/${p}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={badgeClasses(
+                              i % 2 === 0 ? "token" : "pool",
+                            )}
+                          >
+                            {i % 2 === 0 ? (
+                              tokenLabel(p)
+                            ) : (
+                              <>
+                                {shorten(p)}
+                                {isV3Path && i % 2 === 1 && poolTypes[i] && (
+                                  <span className="ml-1 text-xs px-1 py-0.5 rounded bg-muted text-muted-foreground">
+                                    {poolTypes[i] === "1"
+                                      ? "Stable"
+                                      : poolTypes[i] === "2"
+                                        ? "V2"
+                                        : poolTypes[i] === "3"
+                                          ? "V3"
+                                          : `Type ${poolTypes[i]}`}
+                                  </span>
+                                )}
+                              </>
+                            )}
+                          </a>
+                          {i < pathData.length - 1 && (
+                            <svg
+                              className="h-4 w-4 text-muted-foreground"
+                              viewBox="0 0 20 20"
+                              fill="currentColor"
+                            >
+                              <path d="M7 5l5 5-5 5" />
+                            </svg>
+                          )}
+                        </React.Fragment>
+                      ))}
+                    </div>
+                  );
+                } else {
+                  return (
+                    <span className="text-sm text-muted-foreground">N/A</span>
+                  );
+                }
+              })()
+            : "****",
         )}
         {kv(
           "Error",
