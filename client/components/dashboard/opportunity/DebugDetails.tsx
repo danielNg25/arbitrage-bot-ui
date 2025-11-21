@@ -309,6 +309,7 @@ export default function DebugDetails({
                 let pathData: string[] = [];
                 // Store pool types for v3 paths
                 let poolTypes: Record<number, string> = {};
+                let poolFees: Record<number, string> = {};
                 let isV3Path = false;
 
                 if (detail.path_v3 && detail.path_v3.length) {
@@ -326,6 +327,7 @@ export default function DebugDetails({
                       const poolIndex = pathData.length - 1; // Index of the pool we just added
                       const poolType = detail.path_v3[i + 4]; // pool_type
                       poolTypes[poolIndex] = poolType;
+                      poolFees[poolIndex] = detail.path_v3[i + 3]; // fee
                     }
                   }
                 } else if (detail.path && detail.path.length) {
@@ -351,17 +353,32 @@ export default function DebugDetails({
                             ) : (
                               <>
                                 {shorten(p)}
-                                {isV3Path && i % 2 === 1 && poolTypes[i] && (
-                                  <span className="ml-1 text-xs px-1 py-0.5 rounded bg-muted text-muted-foreground">
-                                    {poolTypes[i] === "1"
-                                      ? "Stable"
-                                      : poolTypes[i] === "2"
-                                        ? "V2"
-                                        : poolTypes[i] === "3"
-                                          ? "V3"
-                                          : `Type ${poolTypes[i]}`}
-                                  </span>
-                                )}
+                                {isV3Path &&
+                                  i % 2 === 1 &&
+                                  poolTypes[i] &&
+                                  poolFees[i] && (
+                                    <span className="ml-1 text-xs px-1 py-0.5 rounded bg-muted text-muted-foreground">
+                                      {poolTypes[i] === "1"
+                                        ? "Stable" +
+                                          (poolFees[i]
+                                            ? `-(${poolFees[i]})`
+                                            : "")
+                                        : poolTypes[i] === "2"
+                                          ? "V2" +
+                                            (poolFees[i]
+                                              ? `-(${poolFees[i]})`
+                                              : "")
+                                          : poolTypes[i] === "3"
+                                            ? "V3" +
+                                              (poolFees[i]
+                                                ? `-(${poolFees[i]})`
+                                                : "")
+                                            : `Type ${poolTypes[i]}` +
+                                              (poolFees[i]
+                                                ? `-(${poolFees[i]})`
+                                                : "")}
+                                    </span>
+                                  )}
                               </>
                             )}
                           </a>
